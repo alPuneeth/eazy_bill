@@ -1,7 +1,13 @@
-from sqlmodel import Field
-from app.models.base import TimestampMixin
+# Standard library
 from typing import Optional
 from enum import Enum
+
+# Third-party
+from sqlmodel import SQLModel, Field
+from sqlalchemy import Column, Enum as SAEnum
+
+# Local application
+from app.models.utilities import TimestampMixin
 
 
 class StatusEnum(str, Enum):
@@ -10,11 +16,7 @@ class StatusEnum(str, Enum):
     ARCHIVED = "archived"
 
 
-# def utc_now():
-#     return datetime.now(timezone.utc)
-
-
-class StatusModel(TimestampMixin, table=True):
+class Status(TimestampMixin, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: StatusEnum = Field(unique=True)
-    description: str | None = None
+    name: StatusEnum = Field(sa_column=Column(SAEnum(StatusEnum), unique=True))
+    description: Optional[str] = Field(default=None)
