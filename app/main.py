@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.core.config import settings
-from app.db.database import engine
+from app.db.session import engine
 from sqlalchemy import text
 
 
