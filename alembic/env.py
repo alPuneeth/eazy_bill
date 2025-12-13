@@ -1,16 +1,23 @@
-from app.db.session import engine
-from logging.config import fileConfig
-import sys                     # <-- required
+
+import sys                 
 from pathlib import Path
-
-from alembic import context
-
-from app.core.config import settings
-from app.models.base import Base
+from logging.config import fileConfig
 
 # Add project root to Python path so Alembic can import app.*
 project_root = Path(__file__).resolve().parents[1]
 sys.path.append(str(project_root))
+
+from alembic import context
+from sqlmodel import SQLModel
+
+from app.core.config import settings
+from app.db.session import engine
+
+#  forces all SQLModels to load
+# noqa: F401  
+# # imported for side effects (model registration)
+import app.models
+
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -25,7 +32,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = Base.metadata
+target_metadata = SQLModel.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

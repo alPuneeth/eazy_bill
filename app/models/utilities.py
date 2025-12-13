@@ -1,9 +1,17 @@
-from sqlmodel import SQLModel, Field
+# standard library
 from datetime import datetime, timezone
+import uuid
+
+# third-party library
+from sqlmodel import SQLModel, Field
 
 
 def utc_now():
     return datetime.now(timezone.utc)
+
+
+def generate_uuid():
+    return str(uuid.uuid4())
 
 
 class TimestampMixin(SQLModel):
