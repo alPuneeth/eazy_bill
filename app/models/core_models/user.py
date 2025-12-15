@@ -13,7 +13,7 @@ from app.models.utilities import TimestampMixin, generate_uuid
 
 class UserRole(str, Enum):
     ADMIN = "admin"
-    STAFF = "staff"
+    AGENT = "agent"
     TEST_USER = "test_user"
 
 
@@ -26,7 +26,7 @@ class User(TimestampMixin, SQLModel, table=True):
 
     # role is unique - only one admin and only one staff are allowed
     role: UserRole = Field(sa_column=Column(SAEnum(UserRole), unique=True))
-    is_active: bool = Field(default=False)
+    is_active: bool = Field(default=True, nullable=False)
 
     # remember to manually refresh before committing to DB
     last_login_at: Optional[datetime] = Field(default=None)
