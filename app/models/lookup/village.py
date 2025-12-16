@@ -9,6 +9,46 @@ from app.models.utilities import TimestampMixin
 
 
 class Village(TimestampMixin, SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
-    postal_code: str = Field(index=True)
+    """
+    Village represents a geographic locality used for customer
+    classification and address association.
+
+    This model stores standardized village identifiers along with
+    human-readable names and postal codes. The village_code acts
+    as a canonical, human-referenced identifier used in lookups,
+    imports, and integrations.
+
+    The model defines database structure and integrity only.
+    Any address validation, formatting, or hierarchy logic
+    is enforced at the application or service layer.
+
+    """
+    id: Optional[int] = Field(
+        default=None,
+        primary_key=True
+        )
+
+    # Human-readable village name, commonly used in search
+    name: str = Field(
+        ...,
+        index=True,
+        nullable=False,
+        max_length=50
+        )
+
+    # Postal / PIN code, frequently filtered
+    postal_code: str = Field(
+        ...,
+        index=True,
+        nullable=False,
+        max_length=6
+        )
+
+    # Canonical human-referenced identifier
+    village_code: str = Field(
+        ...,
+        unique=True,
+        index=True,
+        max_length=10,
+        nullable=False
+        )

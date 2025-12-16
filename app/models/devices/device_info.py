@@ -9,13 +9,88 @@ from app.models.utilities import TimestampMixin, generate_uuid
 
 
 class DeviceInfo(TimestampMixin, SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    public_id: str = Field(default_factory=generate_uuid, unique=True)
-    customer_id: int = Field(foreign_key="customer.id")
-    account_number: str
-    stb_id: int
-    vc_number: str
-    previous_vc_number: Optional[str] = Field(default=None)
-    ftth64_id: int = Field(foreign_key="ftth64.id")
-    tvtype_id: int = Field(foreign_key="tvtype.id")
-    status_id: int = Field(foreign_key="status.id")
+    """
+    DeviceInfo represents the physical or logical device details
+    associated with subscription or service of a customer.
+
+    This model stores identifiers such as account numbers, VC numbers,
+    and device references used for provisioning, tracking, and support.
+    It also links the device to its customer, service type, and status.
+
+    The model defines database structure and integrity only.
+    Validation rules and provisioning logic are handled at the
+    application or service layer.
+
+    """
+    id: Optional[int] = Field(
+        default=None,
+        primary_key=True
+        )
+
+    public_id: str = Field(
+        ...,
+        nullable=False,
+        default_factory=generate_uuid,
+        unique=True
+        )
+
+    # FK → Customer (frequently filtered)
+    customer_id: int = Field(
+        ...,
+        index=True,
+        nullable=False,
+        foreign_key="customer.id"
+        )
+
+    account_number: str = Field(
+        ...,
+        index=True,
+        unique=True,
+        nullable=False,
+        max_length=20
+        )
+
+    # Numeric identifier
+    stb_id: int = Field(
+        ...,
+        index=True,
+        nullable=False,
+        )
+
+    vc_number: str = Field(
+        ...,
+        index=True,
+        nullable=False,
+        unique=True,
+        max_length=20
+        )
+
+    previous_vc_number: Optional[str] = Field(
+        default=None,
+        nullable=True,
+        max_length=20
+        )
+
+    # FK → FTTH64
+    ftth64_id: int = Field(
+        ...,
+        nullable=False,
+        index=True,
+        foreign_key="ftth64.id"
+        )
+
+    # FK → TV Type
+    tvtype_id: int = Field(
+        ...,
+        nullable=False,
+        index=True,
+        foreign_key="tvtype.id"
+        )
+
+    # FK → Status
+    status_id: int = Field(
+        ...,
+        nullable=False,
+        index=True,
+        foreign_key="status.id"
+        )
