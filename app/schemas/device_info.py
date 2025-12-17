@@ -41,7 +41,6 @@ class DeviceInfoCreate(BaseModel):
     )
 
     customer_id: int
-    ftth64_id: int
     tvtype_id: int
     status_id: int
 
@@ -56,7 +55,6 @@ class DeviceInfoRead(BaseModel):
     previous_vc_number: Optional[str]
 
     customer_id: int
-    ftth64_id: int
     tvtype_id: int
     status_id: int
 
@@ -71,6 +69,5 @@ class DeviceInfoUpdate(BaseModel):
     previous_vc_number:  Optional[VCStr] = Field(default=None)
 
     customer_id:  Optional[int] = Field(default=None)
-    ftth64_id:  Optional[int] = Field(default=None)
     tvtype_id:  Optional[int] = Field(default=None)
     status_id:  Optional[int] = Field(default=None)
