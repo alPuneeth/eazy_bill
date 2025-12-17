@@ -63,11 +63,25 @@ class DeviceInfoRead(BaseModel):
 
 
 class DeviceInfoUpdate(BaseModel):
-    account_number: Optional[AccountNumberStr] = Field(default=None)
-    stb_id: Optional[int] = Field(default=None)
-    vc_number:  Optional[VCStr] = Field(default=None)
-    previous_vc_number:  Optional[VCStr] = Field(default=None)
+    account_number: Optional[AccountNumberStr] = Field(
+        default=None
+        )
+    stb_id: Optional[int] = Field(
+        default=None
+        )
+    vc_number:  Optional[VCStr] = Field(
+        default=None
+        )
+    previous_vc_number:  Optional[VCStr] = Field(
+        default=None
+        )
 
-    customer_id:  Optional[int] = Field(default=None)
-    tvtype_id:  Optional[int] = Field(default=None)
-    status_id:  Optional[int] = Field(default=None)
+    customer_id:  Optional[int] = Field(
+        default=None
+        )
+    tvtype_id:  Optional[int] = Field(
+        default=None
+        )
+    status_id:  Optional[int] = Field(
+        default=None
+        )

@@ -59,8 +59,18 @@ class UserRead(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    name: Optional[NonEmptyStr] = Field(default=None)
-    phone: Optional[PhoneStr] = Field(default=None)
-    role: Optional[UserRole] = Field(default=None)
-    is_active: Optional[bool] = Field(default=None)
-    last_login_at: Optional[datetime] = Field(default=None)
+    name: Optional[NonEmptyStr] = Field(
+        default=None
+        )
+    phone: Optional[PhoneStr] = Field(
+        default=None
+        )
+    role: Optional[UserRole] = Field(
+        default=None
+        )
+    is_active: Optional[bool] = Field(
+        default=None
+        )
+    last_login_at: Optional[datetime] = Field(
+        default=None
+        )

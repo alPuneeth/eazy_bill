@@ -44,11 +44,19 @@ class SubscriptionRead(BaseModel):
 
 
 class SubscriptionUpdate(BaseModel):
-    customer_id: Optional[int] = Field(default=None)
-    package_id: Optional[int] = Field(default=None)
+    customer_id: Optional[int] = Field(
+        default=None
+        )
+    package_id: Optional[int] = Field(
+        default=None
+        )
 
-    start_date: Optional[datetime] = Field(default=None)
-    end_date: Optional[datetime] = Field(default=None)
+    start_date: Optional[datetime] = Field(
+        default=None
+        )
+    end_date: Optional[datetime] = Field(
+        default=None
+        )
 
     @model_validator(mode="after")
     def validate_subscription_period(self):

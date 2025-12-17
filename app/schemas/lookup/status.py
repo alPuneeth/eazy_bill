@@ -13,7 +13,9 @@ class StatusCreate(BaseModel):
             "examples": ["active", "inactive", "archived"]
             }
         )
-    description: Optional[str] = Field(default=None)
+    description: Optional[str] = Field(
+        default=None
+        )
 
 
 class StatusRead(BaseModel):
@@ -21,11 +23,17 @@ class StatusRead(BaseModel):
 
     id: int
     name: StatusEnum
-    description: Optional[str] = Field(default=None)
+    description: Optional[str] = Field(
+        default=None
+        )
     created_at: datetime
     updated_at: datetime
 
 
 class StatusUpdate(BaseModel):
-    name: Optional[StatusEnum] = Field(default=None)
-    description: Optional[str] = Field(default=None)
+    name: Optional[StatusEnum] = Field(
+        default=None
+        )
+    description: Optional[str] = Field(
+        default=None
+        )

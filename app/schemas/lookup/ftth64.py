@@ -1,18 +1,30 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, StringConstraints
+from typing import Optional, Annotated
 from datetime import datetime
+
+NonEmptyStr = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=40
+    )]
 
 
 class FTTH64Create(BaseModel):
-    name: str = Field(
+    name: NonEmptyStr = Field(
         title="FTTH64",
         description="Identifier representing an FTTH 64-port"
         "configuration type used for network provisioning."
     )
 
-    code: str
+    code: NonEmptyStr = Field(
+        title="Ftth64 Code"
+    )
 
-    description: Optional[str] = Field(default=None)
+    description: Optional[str] = Field(
+        default=None
+        )
 
 
 class FTTH64Read(BaseModel):
@@ -28,6 +40,9 @@ class FTTH64Read(BaseModel):
 
 
 class FTTH64Update(BaseModel):
-    name: Optional[str] = Field(default=None)
-    code: Optional[str] = Field(default=None)
-    description: Optional[str] = Field(default=None)
+    name: Optional[NonEmptyStr] = Field(default=None
+                                        )
+    code: Optional[NonEmptyStr] = Field(default=None
+                                        )
+    description: Optional[str] = Field(default=None
+                                       )

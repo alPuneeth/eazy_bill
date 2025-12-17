@@ -20,19 +20,29 @@ class TVTypeCreate(BaseModel):
             "examples": ["LED", "LCD", "OLED"]
         }
         )
-    description: Optional[str] = Field(default=None)
+    description: Optional[str] = Field(
+        default=None
+        )
 
 
 class TVTypeRead(BaseModel):
-    model_config = {"from_attributes": True}
+    model_config = {
+        "from_attributes": True
+        }
 
     id: int
     name: str
-    description: Optional[str] = Field(default=None)
+    description: Optional[str] = Field(
+        default=None
+        )
     created_at: datetime
     updated_at: datetime
 
 
 class TVTypeUpdate(BaseModel):
-    name: Optional[NonEmptyStr] = Field(default=None)
-    description: Optional[str] = Field(default=None)
+    name: Optional[NonEmptyStr] = Field(
+        default=None
+        )
+    description: Optional[str] = Field(
+        default=None
+        )

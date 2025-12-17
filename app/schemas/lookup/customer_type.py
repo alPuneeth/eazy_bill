@@ -13,19 +13,32 @@ class CustomerTypeCreate(BaseModel):
             "examples": ["regular", "sponsored"]
             }
         )
-    description: Optional[str] = Field(default=None)
+
+    description: Optional[str] = Field(
+        default=None
+        )
 
 
 class CustomerTypeRead(BaseModel):
-    model_config = {"from_attributes": True}
+    model_config = {
+        "from_attributes": True
+        }
 
     public_id: str
     name: CustomerTypeEnum
-    description: Optional[str] = Field(default=None)
+
+    description: Optional[str] = Field(
+        default=None
+        )
+
     created_at: datetime
     updated_at: datetime
 
 
 class CustomerTypeUpdate(BaseModel):
-    name: Optional[CustomerTypeEnum] = Field(default=None)
-    description: Optional[str] = Field(default=None)
+    name: Optional[CustomerTypeEnum] = Field(
+        default=None
+        )
+    description: Optional[str] = Field(
+        default=None
+        )

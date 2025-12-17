@@ -4,17 +4,24 @@ from datetime import datetime
 
 BillCodeStr = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=10)
+    StringConstraints(strip_whitespace=True,
+                      min_length=1,
+                      max_length=10
+                      )
 ]
 
 
 class BillCreate(BaseModel):
     bill_code: BillCodeStr
-    bill_date: datetime 
+    bill_date: datetime
     start_date: datetime
     end_date: datetime
-    monthly_count: int = Field(default=1, ge=0, le=12)
-    bill_amount: float = Field(ge=0)
+    monthly_count: int = Field(
+        default=1, ge=0, le=12
+        )
+    bill_amount: float = Field(
+        ge=0
+        )
 
     customer_id: int
     package_id: int
@@ -34,7 +41,9 @@ class BillCreate(BaseModel):
 
 
 class BillRead(BaseModel):
-    model_config = {"from_attributes": True}
+    model_config = {
+        "from_attributes": True
+        }
 
     public_id: str
     bill_code: str
@@ -52,15 +61,31 @@ class BillRead(BaseModel):
 
 
 class BillUpdate(BaseModel):
-    bill_code: Optional[BillCodeStr] = Field(default=None)
-    bill_date: Optional[datetime] = Field(default=None)
-    start_date: Optional[datetime] = Field(default=None)  # includes time, validate time as well
-    end_date: Optional[datetime] = Field(default=None)
-    monthly_count:  Optional[int] = Field(default=None, ge=0, le=12)
-    bill_amount:  Optional[float] = Field(default=None, ge=0)
-
-    customer_id: Optional[int] = Field(default=None)
-    package_id: Optional[int] = Field(default=None)
+    bill_code: Optional[BillCodeStr] = Field(
+        default=None
+        )
+    bill_date: Optional[datetime] = Field(
+        default=None
+        )
+    start_date: Optional[datetime] = Field(
+        default=None
+        )
+    # includes time, validate time as well
+    end_date: Optional[datetime] = Field(
+        default=None
+        )
+    monthly_count:  Optional[int] = Field(
+        default=None, ge=0, le=12
+        )
+    bill_amount:  Optional[float] = Field(
+        default=None, ge=0
+        )
+    customer_id: Optional[int] = Field(
+        default=None
+        )
+    package_id: Optional[int] = Field(
+        default=None
+        )
 
     @model_validator(mode="after")
     def validate_billing_period(self):

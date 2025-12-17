@@ -98,13 +98,31 @@ class CustomerRead(BaseModel):
 
 
 class CustomerUpdate(BaseModel):
-    name: Optional[NameStr] = Field(default=None)
-    phone: Optional[PhoneStr] = Field(default=None)
-    alternate_number: Optional[PhoneStr] = Field(default=None)
-    aadhaar_number: Optional[AadhaarStr] = Field(default=None)
-    upi_id: Optional[str] = Field(default=None)
+    name: Optional[NameStr] = Field(
+        default=None
+        )
+    phone: Optional[PhoneStr] = Field(
+        default=None
+        )
+    alternate_number: Optional[PhoneStr] = Field(
+        default=None
+        )
+    aadhaar_number: Optional[AadhaarStr] = Field(
+        default=None
+        )
+    upi_id: Optional[str] = Field(
+        default=None
+        )
 
-    village_id: Optional[int] = Field(default=None)
-    ftth64_id: Optional[int] = Field(default=None)
-    customer_type_id: Optional[int] = Field(default=None)
-    description: Optional[str] = Field(default=None)
+    village_id: Optional[int] = Field(
+        default=None
+        )
+    ftth64_id: Optional[int] = Field(
+        default=None
+        )
+    customer_type_id: Optional[int] = Field(
+        default=None
+        )
+    description: Optional[str] = Field(
+        default=None
+        )

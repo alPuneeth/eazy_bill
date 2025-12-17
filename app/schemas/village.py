@@ -56,6 +56,12 @@ class VillageRead(BaseModel):
 
 
 class VillageUpdate(BaseModel):
-    name: Optional[VillageNameStr] = Field(default=None)
-    postal_code: Optional[PostalCodeStr] = Field(default=None)
-    village_code: Optional[VillageCodeStr] = Field(default=None)
+    name: Optional[VillageNameStr] = Field(
+        default=None
+        )
+    postal_code: Optional[PostalCodeStr] = Field(
+        default=None
+        )
+    village_code: Optional[VillageCodeStr] = Field(
+        default=None
+        )

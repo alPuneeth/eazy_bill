@@ -38,6 +38,12 @@ class PackageRead(BaseModel):
 
 
 class PackageUpdate(BaseModel):
-    name: Optional[NameStr] = Field(default=None)
-    price: Optional[float] = Field(default=None, gt=0)
-    description: Optional[str] = Field(default=None)
+    name: Optional[NameStr] = Field(
+        default=None
+        )
+    price: Optional[float] = Field(
+        default=None, gt=0
+        )
+    description: Optional[str] = Field(
+        default=None
+        )
