@@ -52,6 +52,7 @@ class UserRead(BaseModel):
     phone: str
     role: UserRole
     is_active: bool
+    last_login_at: Optional[datetime]
 
     created_at: datetime
     updated_at: datetime
@@ -62,3 +63,4 @@ class UserUpdate(BaseModel):
     phone: Optional[PhoneStr] = Field(default=None)
     role: Optional[UserRole] = Field(default=None)
     is_active: Optional[bool] = Field(default=None)
+    last_login_at: Optional[datetime] = Field(default=None)
