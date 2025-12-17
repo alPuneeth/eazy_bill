@@ -79,6 +79,14 @@ class Customer(TimestampMixin, SQLModel, table=True):
         nullable=False,
         foreign_key="customertype.id"
         )
+    
+    # FK → FTTH64
+    ftth64_id: int = Field(
+        ...,
+        nullable=False,
+        index=True,
+        foreign_key="ftth64.id"
+        )
 
     description: Optional[str] = Field(
         default=None,

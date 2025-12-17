@@ -71,14 +71,6 @@ class DeviceInfo(TimestampMixin, SQLModel, table=True):
         max_length=20
         )
 
-    # FK → FTTH64
-    ftth64_id: int = Field(
-        ...,
-        nullable=False,
-        index=True,
-        foreign_key="ftth64.id"
-        )
-
     # FK → TV Type
     tvtype_id: int = Field(
         ...,
