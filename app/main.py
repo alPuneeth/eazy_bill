@@ -1,12 +1,17 @@
 from fastapi import FastAPI
+from sqlalchemy import text
+
 from app.core.config import settings
 from app.db.session import engine
-from sqlalchemy import text
+from app.api.api_router import api_router
 
 
 app = FastAPI(title=settings.app_name)
 
+app.include_router(api_router)
 
+
+# home_page
 @app.get("/")
 def home():
     return {
@@ -16,6 +21,7 @@ def home():
         }
 
 
+# DB connection check
 @app.get("/db_check")
 def db_check():
     try:

@@ -3,7 +3,8 @@ from datetime import datetime, timezone
 import uuid
 
 # third-party library
-from sqlmodel import SQLModel, Field
+from sqlalchemy import Column, DateTime
+from sqlalchemy.orm import declared_attr
 
 
 def utc_now():
@@ -14,9 +15,20 @@ def generate_uuid():
     return str(uuid.uuid4())
 
 
-class TimestampMixin(SQLModel):
-    created_at: datetime = Field(default_factory=utc_now)
+class TimestampMixin:
+    @declared_attr
+    def created_at(cls):
+        return Column(
+                    DateTime(timezone=True),
+                    nullable=False,
+                    default=utc_now
+                    )
 
-    # NOTE: Manually update this field using utc_now()
-    # before committing any changes.
-    updated_at: datetime = Field(default_factory=utc_now)
+    @declared_attr
+    def updated_at(cls):
+        return Column(
+                    DateTime(timezone=True),
+                    nullable=False,
+                    default=utc_now,
+                    onupdate=utc_now
+                        )
