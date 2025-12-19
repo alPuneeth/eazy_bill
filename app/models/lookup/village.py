@@ -31,6 +31,7 @@ class Village(TimestampMixin, SQLModel, table=True):
     # Human-readable village name, commonly used in search
     name: str = Field(
         ...,
+        unique=True,
         index=True,
         nullable=False,
         max_length=50
