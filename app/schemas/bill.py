@@ -61,12 +61,7 @@ class BillRead(BaseModel):
 
 
 class BillUpdate(BaseModel):
-    bill_code: Optional[BillCodeStr] = Field(
-        default=None
-        )
-    bill_date: Optional[datetime] = Field(
-        default=None
-        )
+
     start_date: Optional[datetime] = Field(
         default=None
         )
@@ -79,9 +74,6 @@ class BillUpdate(BaseModel):
         )
     bill_amount:  Optional[float] = Field(
         default=None, ge=0
-        )
-    customer_id: Optional[int] = Field(
-        default=None
         )
     package_id: Optional[int] = Field(
         default=None

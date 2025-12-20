@@ -44,9 +44,7 @@ class SubscriptionRead(BaseModel):
 
 
 class SubscriptionUpdate(BaseModel):
-    customer_id: Optional[int] = Field(
-        default=None
-        )
+
     package_id: Optional[int] = Field(
         default=None
         )
