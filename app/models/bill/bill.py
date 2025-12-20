@@ -45,7 +45,7 @@ class Bill(TimestampMixin, SQLModel, table=True):
     bill_code: str = Field(
         ...,
         nullable=False,
-        max_length=10,
+        max_length=30,
         unique=True,
         index=True
         )
@@ -57,7 +57,7 @@ class Bill(TimestampMixin, SQLModel, table=True):
 
     package_id: int = Field(
         ...,
-        nullable=False, 
+        nullable=False,
         foreign_key="package.id",
         index=True
         )

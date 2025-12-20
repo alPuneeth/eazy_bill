@@ -8,7 +8,7 @@ AccountNumberStr = Annotated[
     StringConstraints(
         strip_whitespace=True,
         min_length=1,
-        max_length=15
+        max_length=30
     )
 ]
 
@@ -17,7 +17,7 @@ VCStr = Annotated[
     StringConstraints(
         strip_whitespace=True,
         min_length=1,
-        max_length=15
+        max_length=30
     )
 ]
 

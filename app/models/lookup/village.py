@@ -50,6 +50,6 @@ class Village(TimestampMixin, SQLModel, table=True):
         ...,
         unique=True,
         index=True,
-        max_length=10,
+        max_length=30,
         nullable=False
         )

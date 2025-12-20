@@ -47,7 +47,7 @@ class DeviceInfo(TimestampMixin, SQLModel, table=True):
         index=True,
         unique=True,
         nullable=False,
-        max_length=20
+        max_length=30
         )
 
     # Numeric identifier
@@ -62,13 +62,13 @@ class DeviceInfo(TimestampMixin, SQLModel, table=True):
         index=True,
         nullable=False,
         unique=True,
-        max_length=20
+        max_length=30
         )
 
     previous_vc_number: Optional[str] = Field(
         default=None,
         nullable=True,
-        max_length=20
+        max_length=30
         )
 
     # FK → TV Type
