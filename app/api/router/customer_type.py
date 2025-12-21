@@ -25,12 +25,15 @@ def list_customer_types(
     return customer_types
 
 
-@router.get("/{customer_type_id}", response_model=CustomerTypeRead)
+@router.get("/{customer_type_public_id}", response_model=CustomerTypeRead)
 def get_customer_type(
-    customer_type_id: int,
+    customer_type_public_id: str,
     session: Session = Depends(get_session)
 ):
-    customer_type = session.get(CustomerType, customer_type_id)
+    customer_type = session.exec(
+        select(CustomerType).where(CustomerType.public_id == customer_type_public_id)
+    ).first()
+
     if not customer_type:
         raise HTTPException(status_code=404, detail="CustomerType not found")
     return customer_type
@@ -58,13 +61,16 @@ def create_customer_type(
     return customer_type
 
 
-@router.patch("/{customer_type_id}", response_model=CustomerTypeRead)
+@router.patch("/{customer_type_public_id}", response_model=CustomerTypeRead)
 def update_customer_type(
-    customer_type_id: int,
+    customer_type_public_id: str,
     payload: CustomerTypeUpdate,
     session: Session = Depends(get_session)
 ):
-    customer_type = session.get(CustomerType, customer_type_id)
+    customer_type = session.exec(
+        select(CustomerType).where(CustomerType.public_id == customer_type_public_id)
+    ).first()
+
     if not customer_type:
         raise HTTPException(status_code=404, detail="CustomerType not found")
 
