@@ -25,12 +25,15 @@ def list_device_info(
     return device_info
 
 
-@router.get("/{device_info_id}", response_model=DeviceInfoRead)
+@router.get("/{device_info_public_id}", response_model=DeviceInfoRead)
 def get_device_info(
-    device_info_id: int,
+    device_info_public_id: str,
     session: Session = Depends(get_session)
 ):
-    device_info = session.get(DeviceInfo, device_info_id)
+    device_info = session.exec(
+        select(DeviceInfo).where(DeviceInfo.public_id == device_info_public_id)
+    ).first()
+
     if not device_info:
         raise HTTPException(status_code=404, detail="DeviceInfo not found")
     return device_info
@@ -57,13 +60,15 @@ def create_device_info(
     return device_info
 
 
-@router.patch("/{device_info_id}", response_model=DeviceInfoRead)
+@router.patch("/{device_info_public_id}", response_model=DeviceInfoRead)
 def update_device_info(
-    device_info_id: int,
+    device_info_public_id: str,
     payload: DeviceInfoUpdate,
     session: Session = Depends(get_session)
 ):
-    device_info = session.get(DeviceInfo, device_info_id)
+    device_info = session.exec(
+        select(DeviceInfo).where(DeviceInfo.public_id == device_info_public_id)
+    ).first()
     if not device_info:
         raise HTTPException(status_code=404, detail="DeviceInfo not found")
 

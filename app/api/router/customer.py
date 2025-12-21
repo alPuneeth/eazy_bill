@@ -9,7 +9,7 @@ from app.schemas.customer import (
     CustomerRead,
     CustomerUpdate
 )
-from app.models.lookup.status import StatusEnum
+
 from app.models.devices.device_info import DeviceInfo
 
 router = APIRouter(
@@ -106,24 +106,30 @@ def create_customer(
 
 
 # DYNAMIC ROUTES LAST
-@router.get("/{customer_id}", response_model=CustomerRead)
+@router.get("/{customer_public_id}", response_model=CustomerRead)
 def get_customer(
-    customer_id: int,
+    customer_public_id: str,
     session: Session = Depends(get_session)
 ):
-    customer = session.get(Customer, customer_id)
+    customer = session.exec(
+        select(Customer).where(Customer.public_id == customer_public_id)
+    ).first()
+
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
     return customer
 
 
-@router.patch("/{customer_id}", response_model=CustomerRead)
+@router.patch("/{customer_public_id}", response_model=CustomerRead)
 def update_customer(
-    customer_id: int,
+    customer_public_id: str,
     payload: CustomerUpdate,
     session: Session = Depends(get_session)
 ):
-    customer = session.get(Customer, customer_id)
+    customer = session.exec(
+        select(Customer).where(Customer.public_id == customer_public_id)
+    ).first()
+    
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
 

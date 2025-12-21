@@ -25,12 +25,15 @@ def list_subscriptions(
     return subscriptions
 
 
-@router.get("/{subscription_id}", response_model=SubscriptionRead)
+@router.get("/{subscription_public_id}", response_model=SubscriptionRead)
 def get_subscription(
-    subscription_id: int,
+    subscription_public_id: str,
     session: Session = Depends(get_session)
 ):
-    subscription = session.get(Subscription, subscription_id)
+    subscription = session.exec(
+        select(Subscription).where(Subscription.public_id == subscription_public_id)
+    ).first()
+
     if not subscription:
         raise HTTPException(status_code=404, detail="Subscription not found")
     return subscription
@@ -58,13 +61,16 @@ def create_subscription(
     return subscription
 
 
-@router.patch("/{subscription_id}", response_model=SubscriptionRead)
+@router.patch("/{subscription_public_id}", response_model=SubscriptionRead)
 def update_subscription(
-    subscription_id: int,
+    subscription_public_id: str,
     payload: SubscriptionUpdate,
     session: Session = Depends(get_session)
 ):
-    subscription = session.get(Subscription, subscription_id)
+    subscription = session.exec(
+        select(Subscription).where(Subscription.public_id == subscription_public_id)
+    ).first()
+
     if not subscription:
         raise HTTPException(status_code=404, detail="Subscription not found")
 

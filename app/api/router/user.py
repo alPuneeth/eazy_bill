@@ -24,12 +24,15 @@ def list_users(
     return users
 
 
-@router.get("/{user_id}", response_model=UserRead)
+@router.get("/{user_public_id}", response_model=UserRead)
 def get_user(
-    user_id: int,
+    user_public_id: str,
     session: Session = Depends(get_session)
 ):
-    user = session.get(User, user_id)
+    user = session.exec(
+        select(User).where(User.public_id == user_public_id)
+    ).first()
+    
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user

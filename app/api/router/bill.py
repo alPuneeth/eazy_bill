@@ -25,12 +25,15 @@ def list_bills(
     return bills
 
 
-@router.get("/{bill_id}", response_model=BillRead)
+@router.get("/{bill_public_id}", response_model=BillRead)
 def get_bill(
-    bill_id: int,
+    bill_public_id: str,
     session: Session = Depends(get_session)
 ):
-    bill = session.get(Bill, bill_id)
+    bill = session.exec(
+        select(Bill).where(Bill.public_id == bill_public_id)
+    ).first()
+
     if not bill:
         raise HTTPException(status_code=404, detail="Bill not found")
     return bill
@@ -58,13 +61,16 @@ def create_bill(
     return bill
 
 
-@router.patch("/{bill_id}", response_model=BillRead)
+@router.patch("/{bill_public_id}", response_model=BillRead)
 def update_bill(
-    bill_id: int,
+    bill_public_id: str,
     payload: BillUpdate,
     session: Session = Depends(get_session)
 ):
-    bill = session.get(Bill, bill_id)
+    bill = session.exec(
+        select(Bill).where(Bill.public_id == bill_public_id)
+    ).first()
+
     if not bill:
         raise HTTPException(status_code=404, detail="Bill not found")
 
