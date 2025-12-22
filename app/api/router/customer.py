@@ -11,10 +11,13 @@ from app.schemas.customer import (
 )
 
 from app.models.devices.device_info import DeviceInfo
+from app.dependencies.rbac import require_admin
+
 
 router = APIRouter(
     prefix="/customer",
-    tags=["Customer"]
+    tags=["Customer"],
+    dependencies=[Depends(require_admin)]
     )
 
 

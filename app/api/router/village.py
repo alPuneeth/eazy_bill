@@ -3,6 +3,7 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 
+from app.dependencies.rbac import require_admin
 from app.db.session import get_session
 from app.models.lookup.village import Village
 from app.schemas.village import (
@@ -13,7 +14,8 @@ from app.schemas.village import (
 
 router = APIRouter(
     prefix="/village",
-    tags=["Village"]
+    tags=["Village"],
+    dependencies=[Depends(require_admin)]
     )
 
 

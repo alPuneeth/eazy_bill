@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
-
+from app.dependencies.rbac import require_admin
 from app.db.session import get_session
 from app.models.lookup.package import Package
 from app.schemas.package import (
@@ -13,7 +13,8 @@ from app.schemas.package import (
 
 router = APIRouter(
     prefix="/package",
-    tags=["Package"]
+    tags=["Package"],
+    dependencies=[Depends(require_admin)]
     )
 
 

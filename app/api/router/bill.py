@@ -3,6 +3,7 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 
+from app.dependencies.rbac import require_admin
 from app.db.session import get_session
 from app.models.bill.bill import Bill
 from app.schemas.bill import (
@@ -13,7 +14,8 @@ from app.schemas.bill import (
 
 router = APIRouter(
     prefix="/bill",
-    tags=["Bill"]
+    tags=["Bill"],
+    dependencies=[Depends(require_admin)]
     )
 
 
@@ -21,6 +23,7 @@ router = APIRouter(
 def list_bills(
     session: Session = Depends(get_session)
 ):
+    
     bills = session.exec(select(Bill)).all()
     return bills
 

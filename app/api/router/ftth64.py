@@ -3,6 +3,7 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 
+from app.dependencies.rbac import require_admin
 from app.db.session import get_session
 from app.models.lookup.ftth64 import FTTH64
 from app.schemas.lookup.ftth64 import (
@@ -13,7 +14,8 @@ from app.schemas.lookup.ftth64 import (
 
 router = APIRouter(
     prefix="/ftth64",
-    tags=["FTTH64"]
+    tags=["FTTH64"],
+    dependencies=[Depends(require_admin)]
     )
 
 
@@ -51,7 +53,7 @@ def create_ftth64(
         session.rollback()
         raise HTTPException(
             status_code=409,
-            detail="ftth64 with this name already exists"
+            detail="FTTH64 with this name already exists"
              )
 
     session.refresh(ftth64)

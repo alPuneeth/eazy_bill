@@ -3,6 +3,7 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 
+from app.dependencies.rbac import require_admin_or_agent
 from app.db.session import get_session
 from app.models.bill.subscription import Subscription
 from app.schemas.subscription import (
@@ -13,7 +14,8 @@ from app.schemas.subscription import (
 
 router = APIRouter(
     prefix="/subscription",
-    tags=["Subscription"]
+    tags=["Subscription"],
+    dependencies=[Depends(require_admin_or_agent)]
     )
 
 

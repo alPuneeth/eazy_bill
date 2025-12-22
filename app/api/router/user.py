@@ -2,7 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
-
+from app.dependencies.auth import get_current_user
+from app.dependencies.rbac import require_admin
+from app.core.security import get_password_hash
 from app.db.session import get_session
 from app.models.core_models.user import User
 from app.schemas.user import (
@@ -12,8 +14,14 @@ from app.schemas.user import (
 
 router = APIRouter(
     prefix="/user",
-    tags=["User"]
+    tags=["User"],
+    dependencies=[Depends(require_admin)]
     )
+
+
+@router.get("/me")
+def read_me(current_user=Depends(get_current_user)):
+    return current_user
 
 
 @router.get("/", response_model=list[UserRead])
@@ -43,7 +51,13 @@ def create_user(
     payload: UserCreate,
     session: Session = Depends(get_session)
                         ):
-    user = User.model_validate(payload)
+    user = User(
+        name=payload.name,
+        phone=payload.phone,
+        role=payload.role,
+        hashed_password=get_password_hash(payload.password)
+    )
+
     session.add(user)
 
     try:

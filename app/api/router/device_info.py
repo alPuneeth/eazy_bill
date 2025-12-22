@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 
 
 from app.db.session import get_session
+from app.dependencies.rbac import require_admin
 from app.models.devices.device_info import DeviceInfo
 from app.schemas.device_info import (
     DeviceInfoCreate,
@@ -13,7 +14,8 @@ from app.schemas.device_info import (
 
 router = APIRouter(
     prefix="/device_info",
-    tags=["DeviceInfo"]
+    tags=["DeviceInfo"],
+    dependencies=[Depends(require_admin)]
     )
 
 

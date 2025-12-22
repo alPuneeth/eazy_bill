@@ -3,6 +3,7 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 
+from app.dependencies.rbac import require_admin
 from app.db.session import get_session
 from app.models.lookup.tv_type import TVType
 from app.schemas.lookup.tv_type import (
@@ -13,7 +14,8 @@ from app.schemas.lookup.tv_type import (
 
 router = APIRouter(
     prefix="/tv_type",
-    tags=["TVType"]
+    tags=["TVType"],
+    dependencies=[Depends(require_admin)]
     )
 
 
