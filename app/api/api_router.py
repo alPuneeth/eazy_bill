@@ -10,6 +10,7 @@ from app.api.router.package import router as package_router
 from app.api.router.user import router as user_router
 from app.api.router.subscription import router as subscription_router
 from app.api.router.bill import router as bill_router
+from app.api.router.auth import router as auth_router
 
 
 api_router = APIRouter()
@@ -25,3 +26,4 @@ api_router.include_router(package_router)
 api_router.include_router(user_router)
 api_router.include_router(subscription_router)
 api_router.include_router(bill_router)
+api_router.include_router(auth_router)
