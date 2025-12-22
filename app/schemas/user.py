@@ -32,7 +32,10 @@ class UserCreate(BaseModel):
     phone: PhoneStr = Field(
         description="Phone number of the user"
     )
-    hashed_password: str
+    password: str = Field(
+        min_length=6,
+        description="Plain password (will be hashed server-side)"
+    )
     role: UserRole = Field(
         title="User Role",
         description="system role assigned to the user",
