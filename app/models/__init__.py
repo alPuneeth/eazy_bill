@@ -1,6 +1,5 @@
 # bill models
 from app.models.bill.bill import Bill
-from app.models.bill.subscription import Subscription
 
 # core models
 from app.models.core_models.user import User
