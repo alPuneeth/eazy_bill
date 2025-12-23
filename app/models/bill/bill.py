@@ -1,9 +1,11 @@
 # standard library
 from typing import Optional
 from datetime import datetime
+from decimal import Decimal
 
 # third-party
 from sqlmodel import SQLModel, Field
+from sqlalchemy import Column, Numeric
 
 # local module
 from app.models.utilities import TimestampMixin, generate_uuid
@@ -64,12 +66,15 @@ class Bill(TimestampMixin, SQLModel, table=True):
 
     monthly_count: int = Field(
         nullable=False,
-        default=1
+        default=1,
+        ge=0,
+        le=12
         )
 
-    bill_amount: float = Field(
-        ...,
-        nullable=False
+    bill_amount: Decimal = Field(
+        sa_column=Column(
+            Numeric(10, 2),
+            nullable=False)
         )
 
     start_date: datetime = Field(
@@ -81,3 +86,8 @@ class Bill(TimestampMixin, SQLModel, table=True):
         ...,
         nullable=False
         )
+    created_by_id: int = Field(
+        nullable=False,
+        foreign_key="user.id",
+        index=True
+    )

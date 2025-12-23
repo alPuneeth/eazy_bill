@@ -3,7 +3,8 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 
-from app.dependencies.rbac import require_admin
+from app.dependencies.rbac import require_admin, get_current_user
+from app.models.core_models.user import User
 from app.db.session import get_session
 from app.models.bill.bill import Bill
 from app.schemas.bill import (
@@ -45,9 +46,15 @@ def get_bill(
 @router.post("/", response_model=BillRead)
 def create_bill(
     payload: BillCreate,
-    session: Session = Depends(get_session)
-                        ):
-    bill = Bill.model_validate(payload)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+                ):
+
+    bill = Bill(
+        **payload.model_dump(),
+        created_by_id=current_user.id
+    )
+
     session.add(bill)
 
     try:
@@ -57,11 +64,11 @@ def create_bill(
         session.rollback()
         raise HTTPException(
             status_code=409,
-            detail="Duplicate or invalid bill"
+            detail="Duplicate bill_code or invalid bill"
              )
 
     session.refresh(bill)
-    return bill
+    return bill 
 
 
 @router.patch("/{bill_public_id}", response_model=BillRead)
@@ -94,7 +101,7 @@ def update_bill(
 
         raise HTTPException(
             status_code=409,
-            detail="Duplicate or invalid bill"
+            detail="Duplicate bill_code or invalid foreign key"
             )
 
     session.refresh(bill)

@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, model_validator, StringConstraints
 from typing import Optional, Annotated
 from datetime import datetime
+from decimal import Decimal
 
 BillCodeStr = Annotated[
     str,
@@ -17,9 +18,11 @@ class BillCreate(BaseModel):
     start_date: datetime
     end_date: datetime
     monthly_count: int = Field(
-        default=1, ge=0, le=12
+        default=1,
+        ge=0,
+        le=12
         )
-    bill_amount: float = Field(
+    bill_amount: Decimal = Field(
         ge=0
         )
 
@@ -32,11 +35,17 @@ class BillCreate(BaseModel):
         Ensures the subscription period is logically valid.
         This method runs AFTER all fields are parsed and available.
         """
-
+        # 1. Basic period sanity
         if self.end_date <= self.start_date:
             raise ValueError(
                 "end_date must be after start_date"
             )
+
+        # 2. Ensure bill_date lies within the billing period
+        if not (self.start_date <= self.bill_date <= self.end_date):
+            raise ValueError(
+                "bill_date must lie within start_date and end_date"
+                            )
         return self
 
 
@@ -51,10 +60,11 @@ class BillRead(BaseModel):
     start_date: datetime
     end_date: datetime
     monthly_count: int
-    bill_amount: float
+    bill_amount: Decimal
 
     customer_id: int
     package_id: int
+    created_by_id: int
 
     created_at: datetime
     updated_at: datetime
@@ -72,7 +82,7 @@ class BillUpdate(BaseModel):
     monthly_count:  Optional[int] = Field(
         default=None, ge=0, le=12
         )
-    bill_amount:  Optional[float] = Field(
+    bill_amount:  Optional[Decimal] = Field(
         default=None, ge=0
         )
     package_id: Optional[int] = Field(
