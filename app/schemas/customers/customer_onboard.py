@@ -140,6 +140,9 @@ class CustomerOnboardCreate(BaseModel):
 
 
 class CustomerOnboardRead(BaseModel):
+    model_config = {
+        "from_attributes": True
+        }
     # ---------- Customer ----------
     public_id: str
     name: str
@@ -165,7 +168,7 @@ class CustomerOnboardRead(BaseModel):
     status: IdValueRead
 
     # ---------- CurrentPackage ----------
-    package: Optional[IdValueRead]
+    package: IdValueRead
     monthly_rate: float
 
     # ---------- Meta ----------

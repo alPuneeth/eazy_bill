@@ -99,8 +99,9 @@ class Customer(TimestampMixin, SQLModel, table=True):
 
     # Current active package of the customer
     # Represents PRESENT state, not historical billing
-    package_id: Optional[int] = Field(
-        default=None,
+    package_id: int = Field(
+        ...,
+        nullable=False,
         foreign_key="package.id",
         index=True
     )

@@ -134,8 +134,6 @@ def create_customer(
     return customer
 
 
-
-    
 # DYNAMIC ROUTES LAST
 @router.get("/{customer_public_id}", response_model=CustomerRead)
 def get_customer(
@@ -160,7 +158,7 @@ def update_customer(
     customer = session.exec(
         select(Customer).where(Customer.public_id == customer_public_id)
     ).first()
-    
+
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
 
@@ -175,7 +173,8 @@ def update_customer(
         session.rollback()
         raise HTTPException(
                             status_code=409,
-                            detail="Invalid reference or duplicate customer data"
+                            detail="Invalid reference or"
+                            "duplicate customer data"
                             )
 
     session.refresh(customer)

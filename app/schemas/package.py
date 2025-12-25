@@ -11,6 +11,15 @@ NameStr = Annotated[
     )
 ]
 
+DesStr = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=50
+    )
+]
+
 
 class PackageCreate(BaseModel):
     name: NameStr = Field(
@@ -47,3 +56,4 @@ class PackageUpdate(BaseModel):
     description: Optional[str] = Field(
         default=None
         )
+

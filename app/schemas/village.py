@@ -41,6 +41,9 @@ class VillageCreate(BaseModel):
         description="Displays postal code of the village"
     )
     village_code: VillageCodeStr
+    agent_restricted: bool = Field(
+        description="If True, agent cannot view customers from this village"
+    )
 
 
 class VillageRead(BaseModel):
@@ -50,6 +53,7 @@ class VillageRead(BaseModel):
     name: str
     postal_code: str
     village_code: str
+    agent_restricted: bool
 
     created_at: datetime
     updated_at: datetime
@@ -63,5 +67,8 @@ class VillageUpdate(BaseModel):
         default=None
         )
     village_code: Optional[VillageCodeStr] = Field(
+        default=None
+        )
+    agent_restricted: Optional[bool] = Field(
         default=None
         )

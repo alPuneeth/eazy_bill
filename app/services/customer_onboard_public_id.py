@@ -1,7 +1,9 @@
 from sqlmodel import Session
 from sqlalchemy import select
 
-from app.schemas.customers.customer_onboard import CustomerOnboardRead, CustomerOnboardUpdate
+from app.schemas.customers.customer_onboard import (
+    CustomerOnboardRead, CustomerOnboardUpdate
+    )
 from app.schemas.common import IdValueRead
 
 from app.models.core_models.customer import Customer
@@ -24,26 +26,30 @@ def build_customer_onboard_read(customer_public_id: str, session: Session):
     • Minimal, explicit typing escape hatch
     """
 
+    print(type(Customer.package_id))
+    print(type(Package.id))
+
     stmt = (
-        select(
-            Customer,
-            Village,
-            CustomerType,
-            FTTH64,
-            Package,
-            DeviceInfo,
-            TVType,
-            Status,
+            select(
+                Customer,
+                Village,
+                CustomerType,
+                FTTH64,
+                Package,
+                DeviceInfo,
+                TVType,
+                Status,
+            )
+            .select_from(Customer)
+            .join(Village, Village.id == Customer.village_id)
+            .join(CustomerType, CustomerType.id == Customer.customer_type_id)
+            .join(FTTH64, FTTH64.id == Customer.ftth64_id)
+            .outerjoin(Package, Package.id == Customer.package_id)
+            .outerjoin(DeviceInfo, DeviceInfo.customer_id == Customer.id)
+            .outerjoin(TVType, TVType.id == DeviceInfo.tvtype_id)
+            .outerjoin(Status, Status.id == DeviceInfo.status_id)
+            .where(Customer.public_id == customer_public_id)
         )
-        .join(Village, Village.id == Customer.village_id)
-        .join(CustomerType, CustomerType.id == Customer.customer_type_id)
-        .join(FTTH64, FTTH64.id == Customer.ftth64_id)
-        .join(Package, Package.id == Customer.package_id)
-        .join(DeviceInfo, DeviceInfo.customer_id == Customer.id)
-        .join(TVType, TVType.id == DeviceInfo.tvtype_id)
-        .join(Status, Status.id == DeviceInfo.status_id)
-        .where(Customer.public_id == customer_public_id)
-    )
 
     (
         customer,
@@ -54,7 +60,7 @@ def build_customer_onboard_read(customer_public_id: str, session: Session):
         device,
         tvtype,
         status,
-    ) = session.execute(stmt).one()
+    ) = session.execute(stmt).first()
 
     return CustomerOnboardRead(
         public_id=customer.public_id,

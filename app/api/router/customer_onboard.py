@@ -3,9 +3,12 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 from app.db.session import get_session
-from app.services.customer_onboard import (
+from app.services.customer_onboard_public_id import (
     build_customer_onboard_read,
     patch_customer_onboard
+    )
+from app.services.customer_onboard_orm import (
+    build_customer_onboard_read_from_customer
     )
 from app.models.core_models.customer import Customer
 from app.models.devices.device_info import DeviceInfo
@@ -27,6 +30,17 @@ router = APIRouter(
     prefix="/customer/onboard",
     tags=["Customer Onboard"]
     )
+
+
+@router.get("/", response_model=list[CustomerOnboardRead],
+            summary="List all onboard customers")
+def list_onboard_customers(
+    session: Session = Depends(get_session)
+):
+    customers = session.exec(select(Customer)).all()
+
+    return [build_customer_onboard_read_from_customer(customer, session)
+            for customer in customers]
 
 
 @router.get("/{customer_public_id}", response_model=CustomerOnboardRead)
