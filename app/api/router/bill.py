@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
+from datetime import date
 
 
-from app.dependencies.rbac import require_admin, get_current_user
+from app.dependencies.rbac import require_admin_or_agent, get_current_user
 from app.models.core_models.user import User
 from app.db.session import get_session
 from app.models.bill.bill import Bill
@@ -16,7 +17,7 @@ from app.schemas.bill import (
 router = APIRouter(
     prefix="/bill",
     tags=["Bill"],
-    dependencies=[Depends(require_admin)]
+    dependencies=[Depends(require_admin_or_agent)]
     )
 
 
@@ -83,6 +84,12 @@ def update_bill(
 
     if not bill:
         raise HTTPException(status_code=404, detail="Bill not found")
+    
+    if bill.created_at.date() != date.today():
+        raise HTTPException(
+            status_code=400,
+            detail="Bills cannot be modified after the day of creation"
+        )
 
     update_data = payload.model_dump(exclude_unset=True)
     if not update_data:

@@ -2,6 +2,8 @@ from pydantic import BaseModel, Field, StringConstraints
 from typing import Optional, Annotated
 from datetime import datetime
 
+from app.schemas.common import IdValueRead
+
 NameStr = Annotated[
     str,
     StringConstraints(
@@ -28,6 +30,30 @@ AadhaarStr = Annotated[
         max_length=12,
         pattern="^[2-9]\\d{11}$"
     )
+]
+
+AccountNumberStr = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True,
+                      min_length=1, 
+                      max_length=30
+                      )
+]
+
+VCStr = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True,
+                      min_length=1,
+                      max_length=30
+                      )
+]
+
+TVNameStr = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True,
+                      min_length=1,
+                      max_length=50
+                      )
 ]
 
 
@@ -73,6 +99,10 @@ class CustomerCreate(BaseModel):
         title="FTTH64 id"
         )
 
+    package_id: int = Field(
+        title="Package id"
+    )
+
     description: Optional[str] = Field(
         default=None
         )
@@ -88,9 +118,10 @@ class CustomerRead(BaseModel):
     alternate_number: Optional[str]
     upi_id: Optional[str]
 
-    village_id: int
-    customer_type_id: int
-    ftth64_id: int
+    village: IdValueRead
+    customer_type: IdValueRead
+    ftth64: IdValueRead
+    package: IdValueRead
 
     created_at: datetime
     updated_at: datetime
@@ -98,6 +129,7 @@ class CustomerRead(BaseModel):
 
 
 class CustomerUpdate(BaseModel):
+
     name: Optional[NameStr] = Field(
         default=None
         )
@@ -123,6 +155,9 @@ class CustomerUpdate(BaseModel):
     customer_type_id: Optional[int] = Field(
         default=None
         )
+    package_id: Optional[int] = Field(
+        default=None
+    )
     description: Optional[str] = Field(
         default=None
         )

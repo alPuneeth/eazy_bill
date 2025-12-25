@@ -2,6 +2,8 @@ from pydantic import BaseModel, Field, StringConstraints
 from typing import Annotated, Optional
 from datetime import datetime
 
+from app.schemas.common import IdValueRead
+
 
 AccountNumberStr = Annotated[
     str,
@@ -13,6 +15,15 @@ AccountNumberStr = Annotated[
 ]
 
 VCStr = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=30
+    )
+]
+
+NameStr = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
@@ -39,6 +50,11 @@ class DeviceInfoCreate(BaseModel):
         title="Previous vc number",
         description="Previous Viewing Card number"
     )
+    tv_name: Optional[NameStr] = Field(
+        default=None,
+        title="TV name",
+        description="Brand or manufacturer name of the TV"
+    )
 
     customer_id: int
     tvtype_id: int
@@ -53,10 +69,12 @@ class DeviceInfoRead(BaseModel):
     stb_id: int
     vc_number: str
     previous_vc_number: Optional[str]
+    tv_name: Optional[str]
 
-    customer_id: int
-    tvtype_id: int
-    status_id: int
+    customer_public_id: str  # changed from customer_id: int
+
+    tvtype: IdValueRead  # changed from int to IdValueRead --> Read models expose meaning, not IDs
+    status: IdValueRead
 
     created_at: datetime
     updated_at: datetime
@@ -75,8 +93,7 @@ class DeviceInfoUpdate(BaseModel):
     previous_vc_number:  Optional[VCStr] = Field(
         default=None
         )
-
-    customer_id:  Optional[int] = Field(
+    tv_name:  Optional[NameStr] = Field(
         default=None
         )
     tvtype_id:  Optional[int] = Field(

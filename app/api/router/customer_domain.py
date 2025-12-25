@@ -1,27 +1,35 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 from app.db.session import get_session
 from app.models.core_models.customer import Customer
-from app.schemas.customer import (
+from app.models.devices.device_info import DeviceInfo
+from app.models.lookup.village import Village
+from app.models.lookup.customer_type import CustomerType
+from app.models.lookup.package import Package
+from app.models.lookup.ftth64 import FTTH64
+from app.models.lookup.status import StatusEnum, Status
+from app.models.lookup.tv_type import TVType
+
+from app.schemas.customers.customer_domain import (
     CustomerCreate,
     CustomerRead,
     CustomerUpdate
 )
 
-from app.models.devices.device_info import DeviceInfo
-from app.dependencies.rbac import require_admin
+# from app.models.devices.device_info import DeviceInfo
+# from app.dependencies.rbac import require_admin
 
 
 router = APIRouter(
-    prefix="/customer",
-    tags=["Customer"],
-    dependencies=[Depends(require_admin)]
+    prefix="/customer/domain",
+    tags=["Customer"]
     )
 
 
 # STATIC ROUTES FIRST
+# List of ACTIVE customers
 @router.get(
         "/active",
         response_model=list[CustomerRead],
@@ -30,17 +38,23 @@ router = APIRouter(
 def list_active_customers(
     session: Session = Depends(get_session)
 ):
-    ACTIVE_STATUS_ID = 1
+    active_status = session.exec(
+        select(Status).where(Status.name == StatusEnum.ACTIVE)
+    ).one()
+
     stmt = (
-        select(Customer)
-        .join(DeviceInfo)
-        .where(DeviceInfo.status_id == ACTIVE_STATUS_ID)
-        .distinct()
-        )
+            select(Customer)
+            .join(DeviceInfo)
+            .where(DeviceInfo.status_id == active_status.id)
+            .distinct()
+            )
 
-    return session.exec(stmt).all()
+    customers = session.exec(stmt).all()
+
+    return customers
 
 
+# List of INACTIVE customers
 @router.get(
         "/inactive",
         response_model=list[CustomerRead],
@@ -49,17 +63,24 @@ def list_active_customers(
 def list_inactive_customers(
     session: Session = Depends(get_session)
 ):
-    INACTIVE_STATUS_ID = 2
+
+    inactive_status = session.exec(
+        select(Status).where(Status.name == StatusEnum.INACTIVE)
+    ).one()
+
     stmt = (
-        select(Customer)
-        .join(DeviceInfo)
-        .where(DeviceInfo.status_id == INACTIVE_STATUS_ID)
-        .distinct()
-        )
+            select(Customer)
+            .join(DeviceInfo)
+            .where(DeviceInfo.status_id == inactive_status.id)
+            .distinct()
+            )
 
-    return session.exec(stmt).all()
+    customers = session.exec(stmt).all()
+
+    return customers
 
 
+# List of ARCHIVED customers
 @router.get(
         "/archive",
         response_model=list[CustomerRead],
@@ -68,15 +89,20 @@ def list_inactive_customers(
 def list_archive_customers(
     session: Session = Depends(get_session)
 ):
-    ARCHIVE_STATUS_ID = 3
-    stmt = (
-        select(Customer)
-        .join(DeviceInfo)
-        .where(DeviceInfo.status_id == ARCHIVE_STATUS_ID)
-        .distinct()
-        )
+    archived_status = session.exec(
+        select(Status).where(Status.name == StatusEnum.ARCHIVED)
+    ).one()
 
-    return session.exec(stmt).all()
+    stmt = (
+            select(Customer)
+            .join(DeviceInfo)
+            .where(DeviceInfo.status_id == archived_status.id)
+            .distinct()
+            )
+
+    customers = session.exec(stmt).all()
+
+    return customers
 
 
 @router.get("/", response_model=list[CustomerRead])
@@ -108,6 +134,8 @@ def create_customer(
     return customer
 
 
+
+    
 # DYNAMIC ROUTES LAST
 @router.get("/{customer_public_id}", response_model=CustomerRead)
 def get_customer(
