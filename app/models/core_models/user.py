@@ -61,7 +61,7 @@ class User(TimestampMixin, SQLModel, table=True):
         )
 
 
-    # role is unique - only one admin and only one staff are allowed
+    # role is unique - only one fgftradmin and only one staff are allowed
     role: UserRole = Field(
         ...,
         sa_column=Column(

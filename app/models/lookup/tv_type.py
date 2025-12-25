@@ -2,10 +2,11 @@
 from typing import Optional
 
 # third-party
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 
 # local module
 from app.models.utilities import TimestampMixin
+from app.models.devices.device_info import DeviceInfo
 
 
 class TVType(TimestampMixin, SQLModel, table=True):
@@ -38,4 +39,7 @@ class TVType(TimestampMixin, SQLModel, table=True):
     description: Optional[str] = Field(
         nullable=True,
         default=None
+        )
+    devices: list["DeviceInfo"] = Relationship(
+        back_populates="tvtype"
         )

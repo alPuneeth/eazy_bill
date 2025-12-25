@@ -40,6 +40,19 @@ class Package(TimestampMixin, SQLModel, table=True):
         index=True
         )
 
+    # NEW — number of channels (optional)
+    channel_count: Optional[int] = Field(
+        default=None,
+        nullable=True,
+        description="Total number of channels in this package"
+    )
+
+    # NEW — features description
+    features: Optional[str] = Field(
+        default=None,
+        description="Package features (HD, OTT, regional packs, etc.)"
+    )
+
     description: Optional[str] = Field(
         default=None,
         nullable=True

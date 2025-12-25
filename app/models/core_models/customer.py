@@ -1,11 +1,15 @@
 # standard library
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 # third-party
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 
 # local module
 from app.models.utilities import TimestampMixin, generate_uuid
+from app.models.lookup.package import Package
+
+if TYPE_CHECKING:
+    from app.models.devices.device_info import DeviceInfo
 
 
 class Customer(TimestampMixin, SQLModel, table=True):
@@ -79,7 +83,7 @@ class Customer(TimestampMixin, SQLModel, table=True):
         nullable=False,
         foreign_key="customertype.id"
         )
-    
+
     # FK → FTTH64
     ftth64_id: int = Field(
         ...,
@@ -92,3 +96,19 @@ class Customer(TimestampMixin, SQLModel, table=True):
         default=None,
         nullable=True
         )
+
+    # Current active package of the customer
+    # Represents PRESENT state, not historical billing
+    package_id: int = Field(
+        ...,
+        foreign_key="package.id",
+        nullable=False,
+        index=True
+    )
+
+    devices: list["DeviceInfo"] = Relationship(
+        back_populates="customer"
+        )
+
+    # Relationship to Package (read convenience only)
+    package: Optional["Package"] = Relationship()

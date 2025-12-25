@@ -1,11 +1,17 @@
 # standard library
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 # third-party
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 
 # local module
 from app.models.utilities import TimestampMixin, generate_uuid
+
+
+if TYPE_CHECKING:
+    from app.models.core_models.customer import Customer
+    from app.models.lookup.status import Status
+    from app.models.lookup.tv_type import TVType
 
 
 class DeviceInfo(TimestampMixin, SQLModel, table=True):
@@ -71,6 +77,12 @@ class DeviceInfo(TimestampMixin, SQLModel, table=True):
         max_length=30
         )
 
+    tv_name: Optional[str] = Field(
+        default=None,
+        max_length=50,
+        description="Brand or manufacturer of the TV"
+    )
+
     # FK → TV Type
     tvtype_id: int = Field(
         ...,
@@ -86,3 +98,7 @@ class DeviceInfo(TimestampMixin, SQLModel, table=True):
         index=True,
         foreign_key="status.id"
         )
+
+    customer: Optional["Customer"] = Relationship(back_populates="devices")
+    tvtype: "TVType" = Relationship(back_populates="devices")
+    status: "Status" = Relationship(back_populates="devices")

@@ -1,13 +1,16 @@
 # Standard library
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from enum import Enum
 
 # Third-party
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import Column, Enum as SAEnum
 
 # Local application
 from app.models.utilities import TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.devices.device_info import DeviceInfo
 
 
 class StatusEnum(str, Enum):
@@ -53,4 +56,8 @@ class Status(TimestampMixin, SQLModel, table=True):
     description: Optional[str] = Field(
         default=None,
         nullable=True
+        )
+    
+    devices: list["DeviceInfo"] = Relationship(
+        back_populates="status"
         )

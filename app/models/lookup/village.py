@@ -53,3 +53,10 @@ class Village(TimestampMixin, SQLModel, table=True):
         max_length=30,
         nullable=False
         )
+
+    # NEW — agent visibility flag
+    agent_restricted: bool = Field(
+        default=True,
+        nullable=False,
+        description="If True, agent cannot view customers from this village"
+    )
