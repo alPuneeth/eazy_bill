@@ -3,6 +3,7 @@ from typing import Optional, TYPE_CHECKING
 
 # third-party
 from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy import text
 
 # local module
 from app.models.utilities import TimestampMixin, generate_uuid
@@ -93,10 +94,10 @@ class DeviceInfo(TimestampMixin, SQLModel, table=True):
 
     # FK → Status
     status_id: int = Field(
-        ...,
         nullable=False,
         index=True,
-        foreign_key="status.id"
+        foreign_key="status.id",
+        sa_column_kwargs={"server_default": text("1")}
         )
 
     customer: Optional["Customer"] = Relationship(back_populates="devices")

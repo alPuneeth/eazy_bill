@@ -1,3 +1,4 @@
-SECRET_KEY = "dev-password-CHANGE-THIS-LATER"
+SECRET_KEY = "bgKqT4TjuMBwptyspMbnoWHnuub9lECHyhuBFe-"\
+"zlsblzIday4JgfKixk1LBFOVfxZxirnySDf_TGcTPnDZz5A"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
