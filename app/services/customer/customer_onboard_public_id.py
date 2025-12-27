@@ -1,4 +1,5 @@
 from sqlmodel import Session
+from fastapi import HTTPException
 from sqlalchemy import select
 
 from app.schemas.customers.customer_onboard import (
@@ -25,30 +26,34 @@ def build_customer_onboard_read(customer_public_id: str, session: Session):
     • session.exec (SQLModel-preferred)
     • Minimal, explicit typing escape hatch
     """
-
-    print(type(Customer.package_id))
-    print(type(Package.id))
-
     stmt = (
-            select(
-                Customer,
-                Village,
-                CustomerType,
-                FTTH64,
-                Package,
-                DeviceInfo,
-                TVType,
-                Status,
-            )
-            .select_from(Customer)
-            .join(Village, Village.id == Customer.village_id)
-            .join(CustomerType, CustomerType.id == Customer.customer_type_id)
-            .join(FTTH64, FTTH64.id == Customer.ftth64_id)
-            .outerjoin(Package, Package.id == Customer.package_id)
-            .outerjoin(DeviceInfo, DeviceInfo.customer_id == Customer.id)
-            .outerjoin(TVType, TVType.id == DeviceInfo.tvtype_id)
-            .outerjoin(Status, Status.id == DeviceInfo.status_id)
-            .where(Customer.public_id == customer_public_id)
+        select(
+            Customer,
+            Village,
+            CustomerType,
+            FTTH64,
+            Package,
+            DeviceInfo,
+            TVType,
+            Status,
+        )
+        .select_from(Customer)
+        .join(Village, Village.id == Customer.village_id)
+        .join(CustomerType, CustomerType.id == Customer.customer_type_id)
+        .join(FTTH64, FTTH64.id == Customer.ftth64_id)
+        .join(Package, Package.id == Customer.package_id)
+        .join(DeviceInfo, DeviceInfo.customer_id == Customer.id)
+        .join(TVType, TVType.id == DeviceInfo.tvtype_id)
+        .join(Status, Status.id == DeviceInfo.status_id)
+        .where(Customer.public_id == customer_public_id)
+    )
+
+    result = session.execute(stmt).first()
+
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="Customer not found"
         )
 
     (
@@ -60,7 +65,7 @@ def build_customer_onboard_read(customer_public_id: str, session: Session):
         device,
         tvtype,
         status,
-    ) = session.execute(stmt).first()
+    ) = result
 
     return CustomerOnboardRead(
         public_id=customer.public_id,
@@ -101,7 +106,7 @@ def patch_customer_onboard(
 ):
     # Fetch customer
     customer = session.execute(
-        select(Customer).where(Customer.public_id == customer_public_id)
+        select(Customer).where((Customer.public_id == customer_public_id))
     ).scalars().first()
 
     if not customer:
