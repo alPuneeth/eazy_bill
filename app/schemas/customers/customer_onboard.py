@@ -139,6 +139,21 @@ class CustomerOnboardCreate(BaseModel):
         )
 
 
+class CustomerListRead(BaseModel):
+    model_config = {
+        "from_attributes": True
+        }
+
+    public_id: str
+    name: str
+    phone: str
+    vc_number: str
+    status: str
+    monthly_rate: int
+    expiry_date: Optional[datetime]
+    village: str
+
+
 class CustomerOnboardRead(BaseModel):
     model_config = {
         "from_attributes": True

@@ -1,7 +1,9 @@
-from pydantic import BaseModel, Field, model_validator, StringConstraints
+from pydantic import BaseModel, Field, model_validator, StringConstraints, ConfigDict
 from typing import Optional, Annotated
 from datetime import datetime
 from decimal import Decimal
+
+from app.schemas.common import IdValueRead
 
 BillCodeStr = Annotated[
     str,
@@ -23,10 +25,11 @@ class BillCreate(BaseModel):
         le=12
         )
     bill_amount: Decimal = Field(
-        ge=0
+        ge=0,
+        examples=[3400, 9332]
         )
 
-    customer_id: int
+    customer_public_id: str
     package_id: int
 
     @model_validator(mode="after")
@@ -50,9 +53,10 @@ class BillCreate(BaseModel):
 
 
 class BillRead(BaseModel):
-    model_config = {
-        "from_attributes": True
-        }
+    model_config = ConfigDict(
+        from_attributes=True,
+        extra="forbid"
+        )
 
     public_id: str
     bill_code: str
@@ -60,11 +64,12 @@ class BillRead(BaseModel):
     start_date: datetime
     end_date: datetime
     monthly_count: int
-    bill_amount: Decimal
+    bill_amount: Decimal = Field(examples=[3400, 9332])
 
-    customer_id: int
-    package_id: int
-    created_by_id: int
+    customer_public_id: str
+
+    package_id: IdValueRead
+    created_by_id: IdValueRead
 
     created_at: datetime
     updated_at: datetime
