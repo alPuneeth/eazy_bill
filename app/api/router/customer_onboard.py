@@ -1,16 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session, select
+from sqlmodel import Session, select as orm_select
 from sqlalchemy.exc import IntegrityError
 
 from app.db.session import get_session
-from app.services.customer_onboard_public_id import (
+from app.services.customer.customer_onboard_public_id import (
     build_customer_onboard_read,
     patch_customer_onboard
     )
-from app.services.customer_onboard_orm import (
+from app.services.customer.customer_orm import (
     build_customer_onboard_read_from_customer
     )
 from app.models.core_models.customer import Customer
+# from app.models.bill.bill import Bill
 from app.models.devices.device_info import DeviceInfo
 from app.models.lookup.village import Village
 from app.models.lookup.customer_type import CustomerType
@@ -18,38 +19,75 @@ from app.models.lookup.package import Package
 from app.models.lookup.ftth64 import FTTH64
 from app.models.lookup.status import Status
 from app.models.lookup.tv_type import TVType
+# from app.models.lookup.status import StatusEnum
+
+from app.services.customer.customer_list import build_customer_list_query
 
 from app.schemas.customers.customer_onboard import (
     CustomerOnboardCreate,
     CustomerOnboardRead,
     CustomerOnboardUpdate,
+    CustomerListRead
 
 )
 
 router = APIRouter(
-    prefix="/customer/onboard",
-    tags=["Customer Onboard"]
+    prefix="/customer",
+    tags=["Customer"]
     )
 
 
-@router.get("/", response_model=list[CustomerOnboardRead],
-            summary="List all onboard customers")
-def list_onboard_customers(
+# get customers - active + inactive + archived
+@router.get(
+        "/all",
+        response_model=list[CustomerOnboardRead],
+        summary="List all customers"
+            )
+def list_all_customers(
     session: Session = Depends(get_session)
 ):
-    customers = session.exec(select(Customer)).all()
-
+    customers = session.exec(
+        orm_select(Customer)
+    ).all()
     return [build_customer_onboard_read_from_customer(customer, session)
             for customer in customers]
 
 
+# ACTIVE + INACTIVE - card view
+@router.get("/", response_model=list[CustomerListRead],
+                 summary="List active and inactive customers")
+def list_customers(
+    session: Session = Depends(get_session)
+):
+    stmt = build_customer_list_query(
+        device_statuses=["active", "inactive"]
+    )
+    return session.exec(stmt).mappings().all()
+
+
+# ARCHIVED - card view
+@router.get(
+    "/archived",
+    response_model=list[CustomerListRead],
+    summary="List archived customers"
+)
+def list_archived_customers(
+    session: Session = Depends(get_session)
+):
+    stmt = build_customer_list_query(
+        device_statuses=["archived"]
+    )
+    return session.exec(stmt).mappings().all()
+
+
+# GET ONE -single payload
 @router.get("/{customer_public_id}", response_model=CustomerOnboardRead)
-def get_customer_onboard(
+def get_customer(
     customer_public_id: str,
     session: Session = Depends(get_session)
 ):
     customer = session.exec(
-        select(Customer).where(Customer.public_id == customer_public_id)
+        orm_select(Customer).where(Customer.public_id == customer_public_id)
     ).first()
 
     if not customer:
@@ -58,8 +96,9 @@ def get_customer_onboard(
     return build_customer_onboard_read(customer_public_id, session)
 
 
-@router.post("/", response_model=CustomerOnboardRead)
-def create_customer_onboard(
+# POST - single payload
+@router.post("/create", response_model=CustomerOnboardRead)
+def create_customer(
     payload: CustomerOnboardCreate,
     session: Session = Depends(get_session)
 ):
@@ -136,8 +175,9 @@ def create_customer_onboard(
     return build_customer_onboard_read(customer.public_id, session)
 
 
+# PATCH - single payload
 @router.patch("/{customer_public_id}", response_model=CustomerOnboardRead)
-def update_customer_onboard(
+def update_customer(
     customer_public_id: str,
     payload: CustomerOnboardUpdate,
     session: Session = Depends(get_session),
@@ -151,3 +191,5 @@ def update_customer_onboard(
         raise HTTPException(status_code=409, detail="Constraint violation")
 
     return build_customer_onboard_read(customer_public_id, session)
+
+ 
