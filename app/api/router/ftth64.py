@@ -14,8 +14,7 @@ from app.schemas.lookup.ftth64 import (
 
 router = APIRouter(
     prefix="/ftth64",
-    tags=["FTTH64"],
-    dependencies=[Depends(require_admin)]
+    tags=["FTTH64"]
     )
 
 
@@ -38,7 +37,8 @@ def get_ftth64(
     return ftth64
 
 
-@router.post("/", response_model=FTTH64Read)
+@router.post("/", response_model=FTTH64Read,
+             dependencies=[Depends(require_admin)])
 def create_ftth64(
     payload: FTTH64Create,
     session: Session = Depends(get_session)
@@ -60,7 +60,8 @@ def create_ftth64(
     return ftth64
 
 
-@router.patch("/{ftth64_id}", response_model=FTTH64Read)
+@router.patch("/{ftth64_id}", response_model=FTTH64Read,
+              dependencies=[Depends(require_admin)])
 def update_ftth64(
     ftth64_id: int,
     payload: FTTH64Update,

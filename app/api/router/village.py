@@ -5,6 +5,8 @@ from sqlalchemy.exc import IntegrityError
 
 from app.dependencies.rbac import require_admin
 from app.db.session import get_session
+from app.models.core_models.user import User
+from app.dependencies.auth import get_current_user
 from app.models.lookup.village import Village
 from app.schemas.village import (
     VillageCreate,
@@ -14,31 +16,44 @@ from app.schemas.village import (
 
 router = APIRouter(
     prefix="/village",
-    tags=["Village"],
-    dependencies=[Depends(require_admin)]
+    tags=["Village"]
     )
 
 
 @router.get("/", response_model=list[VillageRead])
 def list_villages(
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
-    villages = session.exec(select(Village)).all()
-    return villages
+    stmt = select(Village)
+
+    # restrict for agents (and any non-admin)
+    if current_user.role != "admin":
+        stmt = stmt.where(Village.agent_restricted.is_(False))
+
+    return session.exec(stmt).all()
 
 
 @router.get("/{village_id}", response_model=VillageRead)
 def get_village(
     village_id: int,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
     village = session.get(Village, village_id)
     if not village:
         raise HTTPException(status_code=404, detail="Village not found")
+
+    if current_user.role != "admin" and village.agent_restricted:
+        raise HTTPException(
+            status_code=403,
+            detail="Access to this village is restricted"
+        )
     return village
 
 
-@router.post("/", response_model=VillageRead)
+@router.post("/", response_model=VillageRead,
+             dependencies=[Depends(require_admin)])
 def create_village(
     payload: VillageCreate,
     session: Session = Depends(get_session)
@@ -60,7 +75,8 @@ def create_village(
     return village
 
 
-@router.patch("/{village_id}", response_model=VillageRead)
+@router.patch("/{village_id}", response_model=VillageRead,
+              dependencies=[Depends(require_admin)])
 def update_village(
     village_id: int,
     payload: VillageUpdate,

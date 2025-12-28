@@ -14,8 +14,7 @@ from app.schemas.lookup.tv_type import (
 
 router = APIRouter(
     prefix="/tv_type",
-    tags=["TVType"],
-    dependencies=[Depends(require_admin)]
+    tags=["TVType"]
     )
 
 
@@ -38,7 +37,8 @@ def get_tv_type(
     return tv_type
 
 
-@router.post("/", response_model=TVTypeRead)
+@router.post("/", response_model=TVTypeRead,
+             dependencies=[Depends(require_admin)])
 def create_tv_type(
     payload: TVTypeCreate,
     session: Session = Depends(get_session)
@@ -60,7 +60,8 @@ def create_tv_type(
     return tv_type
 
 
-@router.patch("/{tv_type_id}", response_model=TVTypeRead)
+@router.patch("/{tv_type_id}", response_model=TVTypeRead,
+              dependencies=[Depends(require_admin)])
 def update_tv_type(
     tv_type_id: int,
     payload: TVTypeUpdate,

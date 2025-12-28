@@ -14,8 +14,7 @@ from app.schemas.user import (
 
 router = APIRouter(
     prefix="/user",
-    tags=["User"],
-    dependencies=[Depends(require_admin)]
+    tags=["User"]
     )
 
 
@@ -24,7 +23,8 @@ def read_me(current_user=Depends(get_current_user)):
     return current_user
 
 
-@router.get("/", response_model=list[UserRead])
+@router.get("/", response_model=list[UserRead],
+            dependencies=[Depends(require_admin)])
 def list_users(
     session: Session = Depends(get_session)
 ):
@@ -32,7 +32,8 @@ def list_users(
     return users
 
 
-@router.get("/{user_public_id}", response_model=UserRead)
+@router.get("/{user_public_id}", response_model=UserRead,
+            dependencies=[Depends(require_admin)])
 def get_user(
     user_public_id: str,
     session: Session = Depends(get_session)
@@ -46,7 +47,8 @@ def get_user(
     return user
 
 
-@router.post("/", response_model=UserRead)
+@router.post("/", response_model=UserRead,
+             dependencies=[Depends(require_admin)])
 def create_user(
     payload: UserCreate,
     session: Session = Depends(get_session)

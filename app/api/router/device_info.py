@@ -6,8 +6,12 @@ from sqlalchemy.exc import IntegrityError
 from app.db.session import get_session
 from app.services.devices.device_info import build_deviceinfo_read
 from app.models.lookup.status import Status
+from app.models.core_models.customer import Customer
+from app.dependencies.auth import get_current_user
+from app.models.core_models.user import User
 from app.models.lookup.tv_type import TVType
-from app.dependencies.rbac import require_admin
+from app.models.lookup.village import Village
+from app.services.customer.enforce_customer_vis import enforce_customer_visibility
 from app.models.devices.device_info import DeviceInfo
 from app.schemas.device_info import (
     DeviceInfoCreate,
@@ -17,38 +21,69 @@ from app.schemas.device_info import (
 
 router = APIRouter(
     prefix="/device_info",
-    tags=["DeviceInfo"],
-    dependencies=[Depends(require_admin)]
+    tags=["DeviceInfo"]
     )
 
 
 @router.get("/", response_model=list[DeviceInfoRead])
 def list_device_info(
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
-    devices = session.exec(select(DeviceInfo)).all()
+    stmt = (
+        select(DeviceInfo)
+        .join(Customer, Customer.id == DeviceInfo.customer_id)
+        .join(Village, Village.id == Customer.village_id)
+    )
+
+    # enforce restriction at DB level
+    if current_user.role != "admin":
+        stmt = stmt.where(Village.agent_restricted.is_(False))
+
+    devices = session.exec(stmt).all()
     return [build_deviceinfo_read(d) for d in devices]
 
 
 @router.get("/{device_info_public_id}", response_model=DeviceInfoRead)
 def get_device_info(
     device_info_public_id: str,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
-    device_info = session.exec(
+    device = session.exec(
         select(DeviceInfo).where(DeviceInfo.public_id == device_info_public_id)
     ).first()
 
-    if not device_info:
+    if not device:
         raise HTTPException(status_code=404, detail="DeviceInfo not found")
-    return build_deviceinfo_read(device_info)
+
+    customer = session.get(Customer, device.customer_id)
+    if not customer:
+        raise HTTPException(500, "Customer not found for device")
+
+    enforce_customer_visibility(
+        customer=customer,
+        current_user=current_user,
+        session=session,
+    )
+
+    return build_deviceinfo_read(device)
 
 
 @router.post("/", response_model=DeviceInfoRead)
 def create_device_info(
     payload: DeviceInfoCreate,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
                         ):
+    customer = session.get(Customer, payload.customer_id)
+    if not customer:
+        raise HTTPException(404, "Customer not found")
+
+    enforce_customer_visibility(
+        customer=customer,
+        current_user=current_user,
+        session=session)
 
     # Explicit ORM construction (NO model_validate)
     device_info = DeviceInfo(
@@ -81,13 +116,24 @@ def create_device_info(
 def update_device_info(
     device_info_public_id: str,
     payload: DeviceInfoUpdate,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
     device_info = session.exec(
         select(DeviceInfo).where(DeviceInfo.public_id == device_info_public_id)
-    ).first()
+    ).one_or_none()
+
     if not device_info:
         raise HTTPException(status_code=404, detail="DeviceInfo not found")
+
+    customer = session.get(Customer, device_info.customer_id)
+    if not customer:
+        raise HTTPException(404, "Customer not found")
+
+    enforce_customer_visibility(
+        customer=customer,
+        current_user=current_user,
+        session=session)
 
     update_data = payload.model_dump(exclude_unset=True)
 

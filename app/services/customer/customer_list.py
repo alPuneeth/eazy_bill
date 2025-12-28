@@ -1,17 +1,21 @@
 # used in (ACTIVE + INACTIVE) and ARCHIVED customers
+from sqlmodel import select
+from sqlalchemy import and_
+from sqlalchemy import func
+
 from app.models.core_models.customer import Customer
 from app.models.lookup.village import Village
 from app.models.lookup.package import Package
 from app.models.bill.bill import Bill
 from app.models.lookup.status import Status
 from app.models.devices.device_info import DeviceInfo
-from sqlmodel import select
-from sqlalchemy import and_
-from sqlalchemy import func
+from app.models.core_models.user import User
 
 
-def build_customer_list_query(device_statuses: list[str]):
-      # Subquery: latest bill per customer
+def build_customer_list_query(
+        device_statuses: list[str],
+        current_user: User):
+    # Subquery: latest bill per customer
     latest_bill_subq = (
         select(
             Bill.customer_id,
@@ -21,7 +25,7 @@ def build_customer_list_query(device_statuses: list[str]):
         .subquery()
     )
 
-    return (
+    stmt = (
         select(
             Customer.public_id,
             Customer.name,
@@ -32,18 +36,18 @@ def build_customer_list_query(device_statuses: list[str]):
             Bill.end_date.label("expiry_date"),
             Package.price.label("monthly_rate"),
         )
-        # joins
+        # mandatory joins
         .join(DeviceInfo, DeviceInfo.customer_id == Customer.id)
         .join(Status, Status.id == DeviceInfo.status_id)
         .join(Village, Village.id == Customer.village_id)
         .join(Package, Package.id == Customer.package_id)
 
-        # join ONLY the latest bill
-        .join(
+        # optional bill joins
+        .outerjoin(
             latest_bill_subq,
             latest_bill_subq.c.customer_id == Customer.id,
         )
-        .join(
+        .outerjoin(
             Bill,
             and_(
                 Bill.customer_id == latest_bill_subq.c.customer_id,
@@ -51,6 +55,12 @@ def build_customer_list_query(device_statuses: list[str]):
             ),
         )
 
-        # filter by device status
+        # device status filter
         .where(Status.name.in_(device_statuses))
     )
+
+    # 🔐 authorization rule
+    if current_user.role != "admin":
+        stmt = stmt.where(Village.agent_restricted == False)
+
+    return stmt

@@ -13,8 +13,7 @@ from app.schemas.package import (
 
 router = APIRouter(
     prefix="/package",
-    tags=["Package"],
-    dependencies=[Depends(require_admin)]
+    tags=["Package"]
     )
 
 
@@ -37,7 +36,8 @@ def get_package(
     return package
 
 
-@router.post("/", response_model=PackageRead)
+@router.post("/", response_model=PackageRead,
+             dependencies=[Depends(require_admin)])
 def create_package(
     payload: PackageCreate,
     session: Session = Depends(get_session)
@@ -58,7 +58,8 @@ def create_package(
     return package
 
 
-@router.patch("/{package_id}", response_model=PackageRead)
+@router.patch("/{package_id}", response_model=PackageRead,
+              dependencies=[Depends(require_admin)])
 def update_package(
     package_id: int,
     payload: PackageUpdate,

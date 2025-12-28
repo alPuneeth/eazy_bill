@@ -5,7 +5,9 @@ from sqlalchemy import desc
 from datetime import date
 
 
-from app.dependencies.rbac import require_admin_or_agent, get_current_user
+from app.dependencies.rbac import get_current_user
+from app.models.lookup.village import Village
+from app.services.customer.enforce_customer_vis import enforce_customer_visibility
 from app.models.core_models.user import User
 from app.db.session import get_session
 from app.models.core_models.customer import Customer
@@ -20,15 +22,15 @@ from app.schemas.bill import (
 
 router = APIRouter(
     prefix="/bill",
-    tags=["Bill"],
-    dependencies=[Depends(require_admin_or_agent)]
+    tags=["Bill"]
     )
 
 
 # all bills
 @router.get("/", response_model=list[BillRead])
 def list_bills(
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
     
     stmt = (
@@ -49,10 +51,15 @@ def list_bills(
             Bill.updated_at,
         )
         .join(Customer, Customer.id == Bill.customer_id)
+        .join(Village, Village.id == Customer.village_id)
         .join(Package, Package.id == Bill.package_id)
         .join(User, User.id == Bill.created_by_id)
         .order_by(desc(Bill.bill_date))
     )
+
+    # 🔐 enforce visibility at DB level
+    if current_user.role == "agent":
+        stmt = stmt.where(Village.agent_restricted == False)
 
     rows = session.exec(stmt).mappings().all()
 
@@ -90,17 +97,10 @@ def get_bill(
 ):
     bill = session.exec(
         select(Bill).where(Bill.public_id == bill_public_id)
-    ).first()
+    ).one_or_none()
 
     if not bill:
         raise HTTPException(status_code=404, detail="Bill not found")
-
-    package = session.get(Package, bill.package_id)
-    if not package:
-        raise HTTPException(
-            status_code=500,
-            detail="Package not found for bill"
-        )
 
     customer = session.get(Customer, bill.customer_id)
     if not customer:
@@ -108,7 +108,23 @@ def get_bill(
             status_code=500,
             detail="Customer not found for bill"
         )
-    # customer_public_id=customer.public_id
+
+    enforce_customer_visibility(
+                                customer=customer,
+                                current_user=current_user,
+                                session=session,
+                                )
+    
+    package = session.get(Package, bill.package_id)
+    if not package:
+        raise HTTPException(
+            status_code=500,
+            detail="Package not found for bill"
+        )
+
+    creator = session.get(User, bill.created_by_id)
+    if not creator:
+        raise HTTPException(500, "Creator not found for bill")
 
     return BillRead(
                     public_id=bill.public_id,
@@ -139,7 +155,7 @@ def create_bill(
     current_user: User = Depends(get_current_user)
                 ):
 
-        # 1. Resolve customer
+    # 1. Resolve customer
     customer = session.exec(
         select(Customer).where(
             Customer.public_id == payload.customer_public_id
@@ -150,6 +166,19 @@ def create_bill(
         raise HTTPException(
             status_code=404,
             detail="Customer not found"
+        )
+
+    enforce_customer_visibility(
+                                customer=customer,
+                                current_user=current_user,
+                                session=session,
+                                )
+
+    package = session.get(Package, payload.package_id)
+    if not package:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid package"
         )
 
     # 2. Create bill (explicit mapping)
@@ -169,50 +198,63 @@ def create_bill(
 
     try:
         session.commit()
+
     except IntegrityError:
         session.rollback()
+
         raise HTTPException(
             status_code=409,
             detail="Duplicate bill_code or invalid bill"
         )
+
     session.refresh(bill)
 
-    package = session.get(Package, bill.package_id)
-
     return BillRead(
-    public_id=bill.public_id,
-    bill_code=bill.bill_code,
-    bill_date=bill.bill_date,
-    start_date=bill.start_date,
-    end_date=bill.end_date,
-    monthly_count=bill.monthly_count,
-    bill_amount=bill.bill_amount,
-    customer_public_id=customer.public_id,
-    package_id=IdValueRead(
-        id=bill.package_id,
-        value=package.name
-    ),
-    created_by_id=IdValueRead(
-        id=current_user.id,
-        value=current_user.name
-    ),
-    created_at=bill.created_at,
-    updated_at=bill.updated_at,
-)
+                    public_id=bill.public_id,
+                    bill_code=bill.bill_code,
+                    bill_date=bill.bill_date,
+                    start_date=bill.start_date,
+                    end_date=bill.end_date,
+                    monthly_count=bill.monthly_count,
+                    bill_amount=bill.bill_amount,
+                    customer_public_id=customer.public_id,
+                    package_id=IdValueRead(
+                        id=bill.package_id,
+                        value=package.name
+                    ),
+                    created_by_id=IdValueRead(
+                        id=current_user.id,
+                        value=current_user.name
+                    ),
+                    created_at=bill.created_at,
+                    updated_at=bill.updated_at,
+                )
 
 
 @router.patch("/{bill_public_id}", response_model=BillRead)
 def update_bill(
     bill_public_id: str,
     payload: BillUpdate,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
+
     bill = session.exec(
         select(Bill).where(Bill.public_id == bill_public_id)
     ).first()
 
     if not bill:
         raise HTTPException(status_code=404, detail="Bill not found")
+
+    customer = session.get(Customer, bill.customer_id)
+    if not customer:
+        raise HTTPException(500, "Customer not found for bill")
+
+    enforce_customer_visibility(
+        customer=customer,
+        current_user=current_user,
+        session=session,
+    )
 
     if bill.created_at.date() != date.today():
         raise HTTPException(
@@ -254,7 +296,6 @@ def update_bill(
     if not creator:
         raise HTTPException(500, "Creator not found for bill")
 
-
     return BillRead(
                     public_id=bill.public_id,
                     bill_code=bill.bill_code,
@@ -285,6 +326,7 @@ def update_bill(
 def get_bills_by_customer(
     customer_public_id: str,
     session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
     # 1. Resolve customer
     customer = session.exec(
@@ -296,6 +338,14 @@ def get_bills_by_customer(
             status_code=404,
             detail="Customer not found"
         )
+
+     # Enforce visibility
+    enforce_customer_visibility(
+                                customer=customer,
+                                current_user=current_user,
+                                session=session
+                                )
+
 
     # 2. Fetch bills for this customer
     stmt = (

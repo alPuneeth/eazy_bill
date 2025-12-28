@@ -1,3 +1,7 @@
+# TODO (security): enforce customer visibility in GET/PATCH/POST
+# once feature development stabilizes
+
+# single payload - response model for a customer
 from sqlmodel import Session
 from fastapi import HTTPException
 from sqlalchemy import select

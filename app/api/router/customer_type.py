@@ -14,8 +14,7 @@ from app.schemas.lookup.customer_type import (
 
 router = APIRouter(
     prefix="/customer_type",
-    tags=["CustomerType"],
-    dependencies=[Depends(require_admin)]
+    tags=["CustomerType"]
     )
 
 
@@ -41,7 +40,8 @@ def get_customer_type(
     return customer_type
 
 
-@router.post("/", response_model=CustomerTypeRead)
+@router.post("/", response_model=CustomerTypeRead,
+             dependencies=[Depends(require_admin)])
 def create_customer_type(
     payload: CustomerTypeCreate,
     session: Session = Depends(get_session)
@@ -63,7 +63,8 @@ def create_customer_type(
     return customer_type
 
 
-@router.patch("/{customer_type_public_id}", response_model=CustomerTypeRead)
+@router.patch("/{customer_type_public_id}", response_model=CustomerTypeRead,
+              dependencies=[Depends(require_admin)])
 def update_customer_type(
     customer_type_public_id: str,
     payload: CustomerTypeUpdate,

@@ -14,12 +14,12 @@ from app.schemas.lookup.status import (
 
 router = APIRouter(
     prefix="/status",
-    tags=["Status"],
-    dependencies=[Depends(require_admin)]
+    tags=["Status"]
     )
 
 
-@router.post("/", response_model=StatusRead)
+@router.post("/", response_model=StatusRead,
+             dependencies=[Depends(require_admin)])
 def create_status(
     payload: StatusCreate,
     session: Session = Depends(get_session)
@@ -60,7 +60,8 @@ def list_statuses(
     return statuses
 
 
-@router.patch("/{status_id}", response_model=StatusRead)
+@router.patch("/{status_id}", response_model=StatusRead,
+              dependencies=[Depends(require_admin)])
 def update_status(
     status_id: int,
     payload: StatusUpdate,
