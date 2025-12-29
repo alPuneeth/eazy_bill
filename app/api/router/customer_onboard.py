@@ -25,6 +25,7 @@ from app.models.lookup.tv_type import TVType
 
 from app.services.customer.customer_list import build_customer_list_query
 from app.dependencies.rbac import get_current_user
+from app.dependencies.rbac import require_admin
 
 from app.schemas.customers.customer_onboard import (
     CustomerOnboardCreate,
@@ -45,7 +46,8 @@ router = APIRouter(
 @router.get(
         "/all",
         response_model=list[CustomerOnboardRead],
-        summary="List all customers"
+        summary="List all customers",
+        dependencies=[Depends(require_admin)]
             )
 def list_all_customers(
     session: Session = Depends(get_session)

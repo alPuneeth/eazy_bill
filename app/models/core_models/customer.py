@@ -7,6 +7,8 @@ from sqlmodel import SQLModel, Field, Relationship
 # local module
 from app.models.utilities import TimestampMixin, generate_uuid
 from app.models.lookup.package import Package
+from app.models.lookup.village import Village
+from app.models.lookup.ftth64 import FTTH64
 
 if TYPE_CHECKING:
     from app.models.devices.device_info import DeviceInfo
@@ -112,3 +114,5 @@ class Customer(TimestampMixin, SQLModel, table=True):
 
     # Relationship to Package (read convenience only)
     package: Optional["Package"] = Relationship()
+    village: Optional[Village] = Relationship()
+    ftth64: Optional[FTTH64] = Relationship()

@@ -4,11 +4,14 @@ from datetime import datetime
 from decimal import Decimal
 
 # third-party
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import Column, Numeric
 
 # local module
 from app.models.utilities import TimestampMixin, generate_uuid
+from app.models.lookup.package import Package
+from app.models.core_models.user import User
+from app.models.core_models.customer import Customer
 
 
 class Bill(TimestampMixin, SQLModel, table=True):
@@ -91,3 +94,6 @@ class Bill(TimestampMixin, SQLModel, table=True):
         foreign_key="user.id",
         index=True
     )
+    customer: Optional[Customer] = Relationship()
+    package: Optional[Package] = Relationship()
+    created_by: Optional[User] = Relationship()
