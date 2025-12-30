@@ -6,6 +6,10 @@ from datetime import date
 
 
 from app.dependencies.rbac import get_current_user
+from app.services.status_ids import get_active_inactive_status_ids
+from app.services.device_status import sync_device_status_from_bills
+from app.models.lookup.status import StatusEnum, Status
+
 from app.models.lookup.village import Village
 from app.services.customer.enforce_customer_vis import enforce_customer_visibility
 from app.models.core_models.user import User
@@ -152,9 +156,8 @@ def get_bill(
 def create_bill(
     payload: BillCreate,
     session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user)
-                ):
-
+    current_user: User = Depends(get_current_user),
+):
     # 1. Resolve customer
     customer = session.exec(
         select(Customer).where(
@@ -169,11 +172,12 @@ def create_bill(
         )
 
     enforce_customer_visibility(
-                                customer=customer,
-                                current_user=current_user,
-                                session=session,
-                                )
+        customer=customer,
+        current_user=current_user,
+        session=session,
+    )
 
+    # 2. Validate package
     package = session.get(Package, payload.package_id)
     if not package:
         raise HTTPException(
@@ -181,7 +185,7 @@ def create_bill(
             detail="Invalid package"
         )
 
-    # 2. Create bill (explicit mapping)
+    # 3. Create bill
     bill = Bill(
         bill_code=payload.bill_code,
         bill_date=payload.bill_date,
@@ -197,38 +201,53 @@ def create_bill(
     session.add(bill)
 
     try:
+        # 4. Persist bill
+        session.commit()
+        session.refresh(bill)
+
+        # 5. Resolve ACTIVE / INACTIVE status ids
+        active_status_id, inactive_status_id = (
+            get_active_inactive_status_ids(session)
+        )
+
+        # 6. Sync device status based on bill period
+        sync_device_status_from_bills(
+            customer_id=customer.id,
+            session=session,
+            active_status_id=active_status_id,
+            inactive_status_id=inactive_status_id,
+        )
+
+        # 7. Persist device updates
         session.commit()
 
     except IntegrityError:
         session.rollback()
-
         raise HTTPException(
             status_code=409,
             detail="Duplicate bill_code or invalid bill"
         )
 
-    session.refresh(bill)
-
     return BillRead(
-                    public_id=bill.public_id,
-                    bill_code=bill.bill_code,
-                    bill_date=bill.bill_date,
-                    start_date=bill.start_date,
-                    end_date=bill.end_date,
-                    monthly_count=bill.monthly_count,
-                    bill_amount=bill.bill_amount,
-                    customer_public_id=customer.public_id,
-                    package_id=IdValueRead(
-                        id=bill.package_id,
-                        value=package.name
-                    ),
-                    created_by_id=IdValueRead(
-                        id=current_user.id,
-                        value=current_user.name
-                    ),
-                    created_at=bill.created_at,
-                    updated_at=bill.updated_at,
-                )
+        public_id=bill.public_id,
+        bill_code=bill.bill_code,
+        bill_date=bill.bill_date,
+        start_date=bill.start_date,
+        end_date=bill.end_date,
+        monthly_count=bill.monthly_count,
+        bill_amount=bill.bill_amount,
+        customer_public_id=customer.public_id,
+        package_id=IdValueRead(
+            id=bill.package_id,
+            value=package.name
+        ),
+        created_by_id=IdValueRead(
+            id=current_user.id,
+            value=current_user.name
+        ),
+        created_at=bill.created_at,
+        updated_at=bill.updated_at,
+    )
 
 
 @router.patch("/{bill_public_id}", response_model=BillRead)
@@ -273,6 +292,23 @@ def update_bill(
 
     try:
         session.commit()
+        session.refresh(bill)
+
+        # Resolve ACTIVE / INACTIVE ids
+        active_status_id, inactive_status_id = (
+            get_active_inactive_status_ids(session)
+        )
+
+        # Sync device status
+        sync_device_status_from_bills(
+            customer_id=bill.customer_id,
+            session=session,
+            active_status_id=active_status_id,
+            inactive_status_id=inactive_status_id,
+        )
+
+        # Persist device updates
+        session.commit()
 
     except IntegrityError:
         session.rollback()
@@ -281,8 +317,6 @@ def update_bill(
             status_code=409,
             detail="Duplicate bill_code or invalid foreign key"
             )
-
-    session.refresh(bill)
 
     package = session.get(Package, bill.package_id)
     if not package:
