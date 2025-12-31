@@ -4,6 +4,12 @@ from sqlalchemy.exc import IntegrityError
 
 from app.db.session import get_session
 from app.services.customer.enforce_customer_vis import enforce_customer_visibility
+from app.services.customer_onboard import onboard_single_customer
+from app.schemas.customers.bulk_onboard import (
+    CustomerOnboardBulkCreate,
+    CustomerOnboardRead,
+    CustomerOnboardBulkRead
+    )
 from app.services.customer.customer_onboard_public_id import (
     build_customer_onboard_read,
     patch_customer_onboard
@@ -13,16 +19,6 @@ from app.services.customer.customer_orm import (
     )
 from app.models.core_models.customer import Customer
 from app.models.core_models.user import User
-# from app.models.bill.bill import Bill
-from app.models.devices.device_info import DeviceInfo
-from app.models.lookup.village import Village
-from app.models.lookup.customer_type import CustomerType
-from app.models.lookup.package import Package
-from app.models.lookup.ftth64 import FTTH64
-from app.models.lookup.status import Status
-from app.models.lookup.tv_type import TVType
-# from app.models.lookup.status import StatusEnum
-
 from app.services.customer.customer_list import build_customer_list_query
 from app.dependencies.rbac import get_current_user
 from app.dependencies.rbac import require_admin
@@ -103,7 +99,7 @@ def get_customer(
 
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
-  
+
     enforce_customer_visibility(customer, current_user, session)
 
     return build_customer_onboard_read(customer_public_id, session)
@@ -117,78 +113,28 @@ def create_customer(
     current_user: User = Depends(get_current_user)
 ):
     try:
-        village = session.get(Village, payload.village_id)
-
-        if not village:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid village"
-            )
-
-        if current_user.role == "agent" and village.agent_restricted:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Agents cannot create customers in restricted villages"
-            )
-
-        if not session.get(CustomerType, payload.customer_type_id):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail="Invalid customer type"
-                                )
-        if not session.get(FTTH64, payload.ftth64_id):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail="Invalid FTTH64"
-                                )
-        if not session.get(Package, payload.package_id):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail="Invalid package"
-                                )
-        if not session.get(Status, payload.status_id):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid status"
-                                )
-        if not session.get(TVType, payload.tvtype_id):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid TV type"
-                                )
-
-        customer = Customer(
-            name=payload.name,
-            phone=payload.phone,
-            alternate_number=payload.alternate_number,
-            aadhaar_number=payload.aadhaar_number,
-            upi_id=payload.upi_id,
-            village_id=payload.village_id,
-            customer_type_id=payload.customer_type_id,
-            ftth64_id=payload.ftth64_id,
-            package_id=payload.package_id,
-            description=payload.description
+        customer = onboard_single_customer(
+            payload=payload,
+            session=session,
+            current_user=current_user
         )
-        session.add(customer)
-        session.flush()  # customer.id is now available
-
-        if customer.id is None:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to create customer"
-            )
-
-        device_info = DeviceInfo(
-            customer_id=customer.id,
-            account_number=payload.account_number,
-            stb_id=payload.stb_id,
-            vc_number=payload.vc_number,
-            previous_vc_number=payload.previous_vc_number,
-            tvtype_id=payload.tvtype_id,
-            status_id=payload.status_id,
-            tv_name=payload.tv_name
-        )
-        session.add(device_info)
 
         session.commit()
         session.refresh(customer)
+
+    except PermissionError:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Agents cannot create customers in restricted villages"
+        )
+
+    except ValueError as e:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
 
     except IntegrityError:
         session.rollback()
@@ -197,6 +143,47 @@ def create_customer(
             detail="Duplicate or constraint violation"
         )
     return build_customer_onboard_read(customer.public_id, session)
+
+
+@router.post("/create/bulk",
+             response_model=CustomerOnboardBulkRead
+             )
+def create_customers_bulk(
+    payload: CustomerOnboardBulkCreate,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    success = []
+    failed = []
+
+    for index, customer_payload in enumerate(payload.customers):
+        try:
+            customer = onboard_single_customer(
+                payload=customer_payload,
+                session=session,
+                current_user=current_user
+            )
+
+            session.commit()
+            session.refresh(customer)
+
+            success.append(
+                build_customer_onboard_read(customer.public_id, session)
+            )
+
+        except Exception as e:
+            session.rollback()
+            failed.append({
+                "index": index,
+                "name": customer_payload.name,
+                "phone": customer_payload.phone,
+                "reason": str(e)
+            })
+
+    return {
+        "success": success,
+        "failed": failed
+    }
 
 
 # PATCH - single payload
