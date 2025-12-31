@@ -23,7 +23,7 @@ class CustomerTypeRead(BaseModel):
     model_config = {
         "from_attributes": True
         }
-
+    id: int
     public_id: str
     name: CustomerTypeEnum
 
