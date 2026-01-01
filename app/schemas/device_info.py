@@ -9,8 +9,7 @@ AccountNumberStr = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
-        min_length=1,
-        max_length=30
+        max_length=100
     )
 ]
 
@@ -18,8 +17,7 @@ VCStr = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
-        min_length=1,
-        max_length=30
+        max_length=100
     )
 ]
 
@@ -27,8 +25,7 @@ NameStr = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
-        min_length=1,
-        max_length=30
+        max_length=100
     )
 ]
 
@@ -37,7 +34,7 @@ class DeviceInfoCreate(BaseModel):
     account_number: AccountNumberStr = Field(
         title="Account Number",
     )
-    stb_id: int = Field(
+    stb_id: str = Field(
         title="STB id",
         description="Set Top Box id"
     )
@@ -66,7 +63,7 @@ class DeviceInfoRead(BaseModel):
 
     public_id: str
     account_number: str
-    stb_id: int
+    stb_id: str
     vc_number: str
     previous_vc_number: Optional[str]
     tv_name: Optional[str]
@@ -84,7 +81,7 @@ class DeviceInfoUpdate(BaseModel):
     account_number: Optional[AccountNumberStr] = Field(
         default=None
         )
-    stb_id: Optional[int] = Field(
+    stb_id: Optional[str] = Field(
         default=None
         )
     vc_number:  Optional[VCStr] = Field(

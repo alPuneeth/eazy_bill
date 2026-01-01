@@ -1,5 +1,4 @@
 from pydantic import BaseModel, ConfigDict
-from sqlmodel import Field
 from decimal import Decimal
 from datetime import datetime
 

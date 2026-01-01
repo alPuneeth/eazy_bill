@@ -9,7 +9,7 @@ NameStr = Annotated[
     StringConstraints(
         strip_whitespace=True,
         min_length=1,
-        max_length=30
+        max_length=150
     )
 ]
 
@@ -17,7 +17,6 @@ PhoneStr = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
-        min_length=8,
         max_length=15
     )
 ]
@@ -35,24 +34,21 @@ AadhaarStr = Annotated[
 AccountNumberStr = Annotated[
     str,
     StringConstraints(strip_whitespace=True,
-                      min_length=1, 
-                      max_length=30
+                      max_length=100
                       )
 ]
 
 VCStr = Annotated[
     str,
     StringConstraints(strip_whitespace=True,
-                      min_length=1,
-                      max_length=30
+                      max_length=100
                       )
 ]
 
 TVNameStr = Annotated[
     str,
     StringConstraints(strip_whitespace=True,
-                      min_length=1,
-                      max_length=50
+                      max_length=100
                       )
 ]
 

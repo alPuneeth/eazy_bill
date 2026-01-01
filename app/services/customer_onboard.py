@@ -6,9 +6,6 @@ from sqlalchemy.exc import IntegrityError
 from app.models.core_models.customer import Customer
 from app.models.core_models.user import User
 from app.models.devices.device_info import DeviceInfo
-from app.models.core_models.customer import Customer
-from app.models.core_models.user import User
-from app.models.devices.device_info import DeviceInfo
 from app.models.lookup.village import Village
 from app.models.lookup.customer_type import CustomerType
 from app.models.lookup.package import Package

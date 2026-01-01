@@ -7,7 +7,7 @@ NonEmptyStr = Annotated[
     StringConstraints(
         strip_whitespace=True,
         min_length=1,
-        max_length=40
+        max_length=100
     )]
 
 
