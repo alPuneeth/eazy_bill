@@ -44,7 +44,7 @@ class User(TimestampMixin, SQLModel, table=True):
     name: str = Field(
         ...,
         nullable=False,
-        max_length=50,
+        max_length=150,
         unique=True
         )
 
@@ -59,7 +59,6 @@ class User(TimestampMixin, SQLModel, table=True):
         ...,
         nullable=False
         )
-
 
     # role is unique - only one fgftradmin and only one staff are allowed
     role: UserRole = Field(

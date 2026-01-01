@@ -32,7 +32,7 @@ class FTTH64(TimestampMixin, SQLModel, table=True):
         ...,
         nullable=False,
         index=True,
-        max_length=40
+        max_length=150
     )
 
     description: Optional[str] = Field(
@@ -44,5 +44,5 @@ class FTTH64(TimestampMixin, SQLModel, table=True):
         ...,
         nullable=False,
         index=True,
-        max_length=40
+        max_length=100
     )

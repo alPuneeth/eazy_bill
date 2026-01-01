@@ -45,7 +45,7 @@ class Customer(TimestampMixin, SQLModel, table=True):
         ...,
         index=True,
         nullable=False,
-        max_length=50
+        max_length=150
         )
 
     phone: str = Field(

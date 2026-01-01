@@ -50,7 +50,7 @@ class Bill(TimestampMixin, SQLModel, table=True):
     bill_code: str = Field(
         ...,
         nullable=False,
-        max_length=30,
+        max_length=100,
         unique=True,
         index=True
         )

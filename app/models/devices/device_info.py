@@ -54,11 +54,10 @@ class DeviceInfo(TimestampMixin, SQLModel, table=True):
         index=True,
         unique=True,
         nullable=False,
-        max_length=30
+        max_length=100
         )
 
-    # Numeric identifier
-    stb_id: int = Field(
+    stb_id: str = Field(
         ...,
         index=True,
         nullable=False,
@@ -69,18 +68,18 @@ class DeviceInfo(TimestampMixin, SQLModel, table=True):
         index=True,
         nullable=False,
         unique=True,
-        max_length=30
+        max_length=100
         )
 
     previous_vc_number: Optional[str] = Field(
         default=None,
         nullable=True,
-        max_length=30
+        max_length=100
         )
 
     tv_name: Optional[str] = Field(
         default=None,
-        max_length=50,
+        max_length=100,
         description="Brand or manufacturer of the TV"
     )
 

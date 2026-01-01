@@ -34,7 +34,7 @@ class Village(TimestampMixin, SQLModel, table=True):
         unique=True,
         index=True,
         nullable=False,
-        max_length=50
+        max_length=100
         )
 
     # Postal / PIN code, frequently filtered
@@ -50,7 +50,7 @@ class Village(TimestampMixin, SQLModel, table=True):
         ...,
         unique=True,
         index=True,
-        max_length=30,
+        max_length=100,
         nullable=False
         )
 
