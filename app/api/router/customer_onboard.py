@@ -3,6 +3,7 @@ from sqlmodel import Session, select as orm_select
 from sqlalchemy.exc import IntegrityError
 
 from app.db.session import get_session
+from app.services.customer.single_query_build import build_customer_onboard_list
 from app.services.customer.enforce_customer_vis import enforce_customer_visibility
 from app.services.customer_onboard import onboard_single_customer
 from app.schemas.customers.bulk_onboard import (
@@ -14,9 +15,9 @@ from app.services.customer.customer_onboard_public_id import (
     build_customer_onboard_read,
     patch_customer_onboard
     )
-from app.services.customer.customer_orm import (
-    build_customer_onboard_read_from_customer
-    )
+# from app.services.customer.customer_orm import (
+#     build_customer_onboard_read_from_customer
+#     )
 from app.models.core_models.customer import Customer
 from app.models.core_models.user import User
 from app.services.customer.customer_list import build_customer_list_query
@@ -48,11 +49,7 @@ router = APIRouter(
 def list_all_customers(
     session: Session = Depends(get_session)
 ):
-    customers = session.exec(
-        orm_select(Customer)
-    ).all()
-    return [build_customer_onboard_read_from_customer(customer, session)
-            for customer in customers]
+    return build_customer_onboard_list(session)
 
 
 # ACTIVE + INACTIVE - card view
