@@ -6,7 +6,6 @@ VillageNameStr = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
-        min_length=1,
         max_length=100
     )
 ]
@@ -15,7 +14,6 @@ PostalCodeStr = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
-        min_length=6,
         max_length=6,
         pattern="^[1-9][0-9]{5}$"
     )
@@ -25,7 +23,6 @@ VillageCodeStr = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
-        min_length=1,
         max_length=100
     )
 ]

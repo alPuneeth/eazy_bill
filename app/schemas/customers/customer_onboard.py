@@ -25,7 +25,6 @@ AadhaarStr = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
-        min_length=12,
         max_length=12,
         pattern="^[2-9]\\d{11}$"
     )

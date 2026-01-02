@@ -88,7 +88,11 @@ def build_customer_onboard_list(session: Session) -> list[CustomerOnboardRead]:
                 stb_id=device.stb_id if device else None,
                 vc_number=device.vc_number if device else None,
                 previous_vc_number=device.previous_vc_number if device else None,
-                tv_name=device.tv_name if device else None,
+                tv_name=(
+                        device.tv_name.strip()
+                        if device and device.tv_name and device.tv_name.strip()
+                        else None
+                    ),
 
                 tvtype=(
                     IdValueRead(id=tvtype.id, value=tvtype.name)
