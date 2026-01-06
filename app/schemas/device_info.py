@@ -53,7 +53,7 @@ class DeviceInfoCreate(BaseModel):
         description="Brand or manufacturer name of the TV"
     )
 
-    customer_id: int
+    customer_public_id: str  # changed from customer_id: int
     tvtype_id: int
     status_id: int
 

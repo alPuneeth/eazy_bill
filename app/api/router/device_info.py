@@ -76,7 +76,13 @@ def create_device_info(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
                         ):
-    customer = session.get(Customer, payload.customer_id)
+    customer = session.exec(
+            select(Customer)
+            .where(
+                Customer.public_id == payload.customer_public_id
+                )
+    ).first()
+
     if not customer:
         raise HTTPException(404, "Customer not found")
 
@@ -87,7 +93,7 @@ def create_device_info(
 
     # Explicit ORM construction (NO model_validate)
     device_info = DeviceInfo(
-        customer_id=payload.customer_id,
+        customer_id=customer.id,
         account_number=payload.account_number,
         stb_id=payload.stb_id,
         vc_number=payload.vc_number,

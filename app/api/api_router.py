@@ -4,7 +4,6 @@ from app.api.router.customer_type import router as customer_type_router
 from app.api.router.tv_type import router as tv_type_router
 from app.api.router.ftth64 import router as ftth64_router
 from app.api.router.village import router as village_router
-# from app.api.router.customer_domain import router as customer_domain_router
 from app.api.router.customer_onboard import router as customer_onboard_router
 from app.api.router.device_info import router as device_info_router
 from app.api.router.package import router as package_router
