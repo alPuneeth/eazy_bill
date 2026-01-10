@@ -107,7 +107,7 @@ class CustomerOnboardCreate(BaseModel):
     account_number: AccountNumberStr = Field(
         title="Account Number",
     )
-    stb_id: int = Field(
+    stb_id: str = Field(
         title="STB id",
         description="Set Top Box id"
     )
@@ -169,7 +169,7 @@ class CustomerOnboardRead(BaseModel):
 
     # ---------- Device ----------
     account_number: str
-    stb_id: int
+    stb_id: str
     vc_number: str
     previous_vc_number: Optional[str]
     tv_name: Optional[NameStr]
@@ -201,7 +201,7 @@ class CustomerOnboardUpdate(BaseModel):
 
     # ---- Device ----
     account_number: Optional[str] = None
-    stb_id: Optional[int] = None
+    stb_id: Optional[str] = None
     vc_number: Optional[str] = None
     previous_vc_number: Optional[str] = None
     tv_name: Optional[str] = None
