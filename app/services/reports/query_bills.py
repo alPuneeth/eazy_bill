@@ -39,15 +39,16 @@ def get_bills_with_filters(
             )
         ).first()
 
-    if restricted_exists:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied for one or more villages"
-        )
+        if restricted_exists:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied for one or more villages"
+            )
 
     # ── BASE QUERY ──
     stmt = (
         select(Bill, DeviceInfo)
+        .select_from(Bill)
         .join(Customer, Customer.id == Bill.customer_id)
         .join(Village, Village.id == Customer.village_id)
         .join(FTTH64, FTTH64.id == Customer.ftth64_id)
