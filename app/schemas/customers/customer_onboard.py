@@ -3,6 +3,7 @@ from typing import Optional, Annotated
 from datetime import datetime
 
 from app.schemas.common import IdValueRead
+from app.schemas.bill import BillRead
 
 NameStr = Annotated[
     str,
@@ -180,6 +181,9 @@ class CustomerOnboardRead(BaseModel):
     # ---------- CurrentPackage ----------
     package: IdValueRead
     monthly_rate: float
+
+    # ---------- Latest Bill (FULL OBJECT) ----------
+    latest_bill: Optional[BillRead]
 
     # ---------- Meta ----------
     created_at: datetime
