@@ -1,5 +1,5 @@
 from sqlmodel import Session
-from sqlalchemy import select
+from sqlalchemy import select, func, and_
 
 from app.schemas.customers.customer_onboard import CustomerOnboardRead
 from app.schemas.common import IdValueRead
@@ -12,6 +12,9 @@ from app.models.lookup.ftth64 import FTTH64
 from app.models.lookup.tv_type import TVType
 from app.models.lookup.status import Status
 from app.models.lookup.package import Package
+from app.models.bill.bill import Bill
+from app.schemas.bill import BillRead
+from app.models.core_models.user import User
 
 
 def build_customer_onboard_list(session: Session) -> list[CustomerOnboardRead]:
@@ -24,6 +27,16 @@ def build_customer_onboard_list(session: Session) -> list[CustomerOnboardRead]:
     - No N+1 queries
     """
 
+    # ---- subquery to determine latest bill per customer ----
+    latest_bill_sq = (
+        select(
+            Bill.customer_id,
+            func.max(Bill.bill_date).label("max_bill_date")
+    )
+    .group_by(Bill.customer_id)
+    .subquery()
+    )
+
     stmt = (
         select(
             Customer,
@@ -34,6 +47,8 @@ def build_customer_onboard_list(session: Session) -> list[CustomerOnboardRead]:
             DeviceInfo,
             TVType,
             Status,
+            Bill,
+            User
         )
         .outerjoin(Village, Village.id == Customer.village_id)
         .outerjoin(CustomerType, CustomerType.id == Customer.customer_type_id)
@@ -42,6 +57,18 @@ def build_customer_onboard_list(session: Session) -> list[CustomerOnboardRead]:
         .outerjoin(DeviceInfo, DeviceInfo.customer_id == Customer.id)
         .outerjoin(TVType, TVType.id == DeviceInfo.tvtype_id)
         .outerjoin(Status, Status.id == DeviceInfo.status_id)
+        .outerjoin(
+            latest_bill_sq,
+            latest_bill_sq.c.customer_id == Customer.id
+                   )
+        .outerjoin(
+                Bill,
+                and_(
+                       Bill.customer_id == Customer.id,
+                       Bill.bill_date == latest_bill_sq.c.max_bill_date
+                   )
+                   )
+        .outerjoin(User, User.id == Bill.created_by_id)
         .order_by(Customer.created_at.desc())
     )
 
@@ -58,7 +85,35 @@ def build_customer_onboard_list(session: Session) -> list[CustomerOnboardRead]:
         device,
         tvtype,
         status,
+        bill,
+        creator
     ) in rows:
+
+        latest_bill = None
+        if bill:
+            latest_bill = BillRead(
+                                public_id=bill.public_id,
+                                bill_code=bill.bill_code,
+                                bill_date=bill.bill_date,
+                                start_date=bill.start_date,
+                                end_date=bill.end_date,
+                                monthly_count=bill.monthly_count,
+                                bill_amount=bill.bill_amount,
+
+                                customer_public_id=customer.public_id,
+
+                                package_id=(
+                                    IdValueRead(id=package_.id, value=package_.name)
+                                    if package_ else None
+                                ),
+                                created_by_id=(
+                                    IdValueRead(id=creator.id, value=creator.name)
+                                    if creator else None
+                                ),
+
+                                created_at=bill.created_at,
+                                updated_at=bill.updated_at,
+                            )
 
         results.append(
             CustomerOnboardRead(
@@ -108,6 +163,8 @@ def build_customer_onboard_list(session: Session) -> list[CustomerOnboardRead]:
                     if package_ else None
                 ),
                 monthly_rate=package_.price if package_ else None,
+
+                latest_bill=latest_bill,
 
                 created_at=customer.created_at,
                 updated_at=customer.updated_at,
