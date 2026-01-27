@@ -183,7 +183,7 @@ class CustomerOnboardRead(BaseModel):
     monthly_rate: float
 
     # ---------- Latest Bill (FULL OBJECT) ----------
-    latest_bill: Optional[BillRead]
+    latest_bill: Optional[BillRead] = None
 
     # ---------- Meta ----------
     created_at: datetime

@@ -19,17 +19,113 @@ from app.models.lookup.ftth64 import FTTH64
 from app.models.lookup.tv_type import TVType
 from app.models.lookup.status import Status
 from app.models.lookup.package import Package
+from app.models.bill.bill import Bill
+from app.schemas.bill import BillRead
+from app.models.core_models.user import User 
+
 
 
 def build_customer_onboard_read(customer_public_id: str, session: Session):
+    # """
+    # Optimized onboard read:
+    # • Single DB round-trip
+    # • sqlmodel.select + add_columns
+    # • Explicit joins
+    # • session.exec (SQLModel-preferred)
+    # • Minimal, explicit typing escape hatch
+    # """
+
+    # stmt = (
+    #     select(
+    #         Customer,
+    #         Village,
+    #         CustomerType,
+    #         FTTH64,
+    #         Package,
+    #         DeviceInfo,
+    #         TVType,
+    #         Status,
+    #     )
+    #     .select_from(Customer)
+    #     .join(Village, Village.id == Customer.village_id)
+    #     .join(CustomerType, CustomerType.id == Customer.customer_type_id)
+    #     .join(FTTH64, FTTH64.id == Customer.ftth64_id)
+    #     .join(Package, Package.id == Customer.package_id)
+    #     .join(DeviceInfo, DeviceInfo.customer_id == Customer.id)
+    #     .join(TVType, TVType.id == DeviceInfo.tvtype_id)
+    #     .join(Status, Status.id == DeviceInfo.status_id)
+    #     .where(Customer.public_id == customer_public_id)
+    # )
+
+    # result = session.execute(stmt).first()
+
+    # if not result:
+    #     raise HTTPException(
+    #         status_code=404,
+    #         detail="Customer not found"
+    #     )
+
+    # (
+    #     customer,
+    #     village,
+    #     customer_type,
+    #     ftth64,
+    #     package_,
+    #     device,
+    #     tvtype,
+    #     status,
+    # ) = result
+
+    # # -------- Fetch latest bill (explicit & safe) --------
+    # latest_bill = session.execute(
+    #     select(Bill)
+    #     .where(Bill.customer_id == customer.id)
+    #     .order_by(Bill.created_at.desc())
+    #     .limit(1)
+    #     ).scalars().one_or_none()
+
+    # return CustomerOnboardRead(
+    #     public_id=customer.public_id,
+    #     name=customer.name,
+    #     phone=customer.phone,
+    #     alternate_number=customer.alternate_number,
+    #     aadhaar_number=customer.aadhaar_number,
+    #     upi_id=customer.upi_id,
+
+    #     village=IdValueRead(id=village.id, value=village.name),
+    #     customer_type=IdValueRead(id=customer_type.id,
+    #                               value=customer_type.name),
+    #     ftth64=IdValueRead(id=ftth64.id, value=ftth64.name),
+
+    #     description=customer.description,
+
+    #     account_number=device.account_number,
+    #     stb_id=device.stb_id,
+    #     vc_number=device.vc_number,
+    #     previous_vc_number=device.previous_vc_number,
+    #     tv_name=device.tv_name,
+
+    #     tvtype=IdValueRead(id=tvtype.id, value=tvtype.name),
+    #     status=IdValueRead(id=status.id, value=status.name),
+
+    #     package=IdValueRead(id=package_.id, value=package_.name),
+    #     monthly_rate=package_.price,
+
+    #     latest_bill = latest_bill,
+
+    #     created_at=customer.created_at,
+    #     updated_at=customer.updated_at,
+    # )
+    # def build_customer_onboard_read(customer_public_id: str, session: Session) -> CustomerOnboardRead:
     """
-    Optimized onboard read:
-    • Single DB round-trip
-    • sqlmodel.select + add_columns
-    • Explicit joins
-    • session.exec (SQLModel-preferred)
-    • Minimal, explicit typing escape hatch
+    Optimized single-customer onboard read.
+
+    - Explicit joins for customer core data
+    - Separate, clear latest-bill fetch
+    - Correct ORM → schema mapping
     """
+
+    # -------- Fetch customer + core joins --------
     stmt = (
         select(
             Customer,
@@ -41,7 +137,6 @@ def build_customer_onboard_read(customer_public_id: str, session: Session):
             TVType,
             Status,
         )
-        .select_from(Customer)
         .join(Village, Village.id == Customer.village_id)
         .join(CustomerType, CustomerType.id == Customer.customer_type_id)
         .join(FTTH64, FTTH64.id == Customer.ftth64_id)
@@ -52,13 +147,10 @@ def build_customer_onboard_read(customer_public_id: str, session: Session):
         .where(Customer.public_id == customer_public_id)
     )
 
-    result = session.execute(stmt).first()
+    row = session.execute(stmt).first()
 
-    if not result:
-        raise HTTPException(
-            status_code=404,
-            detail="Customer not found"
-        )
+    if not row:
+        raise HTTPException(status_code=404, detail="Customer not found")
 
     (
         customer,
@@ -69,8 +161,46 @@ def build_customer_onboard_read(customer_public_id: str, session: Session):
         device,
         tvtype,
         status,
-    ) = result
+    ) = row
 
+    # -------- Fetch latest bill (explicit & safe) --------
+    bill_row = session.execute(
+        select(Bill, Package, User)
+        .join(Package, Package.id == Bill.package_id)
+        .join(User, User.id == Bill.created_by_id)
+        .where(Bill.customer_id == customer.id)
+        .order_by(Bill.created_at.desc())
+        .limit(1)
+    ).first()
+
+    latest_bill_read = None
+    if bill_row:
+        bill, bill_package, creator = bill_row
+        latest_bill_read = BillRead(
+            public_id=bill.public_id,
+            bill_code=bill.bill_code,
+            bill_date=bill.bill_date,
+            start_date=bill.start_date,
+            end_date=bill.end_date,
+            monthly_count=bill.monthly_count,
+            bill_amount=bill.bill_amount,
+
+            customer_public_id=customer.public_id,
+
+            package_id=IdValueRead(
+                id=bill_package.id,
+                value=bill_package.name
+            ),
+            created_by_id=IdValueRead(
+                id=creator.id,
+                value=creator.name
+            ),
+
+            created_at=bill.created_at,
+            updated_at=bill.updated_at,
+        )
+
+    # -------- Assemble response --------
     return CustomerOnboardRead(
         public_id=customer.public_id,
         name=customer.name,
@@ -80,8 +210,7 @@ def build_customer_onboard_read(customer_public_id: str, session: Session):
         upi_id=customer.upi_id,
 
         village=IdValueRead(id=village.id, value=village.name),
-        customer_type=IdValueRead(id=customer_type.id,
-                                  value=customer_type.name),
+        customer_type=IdValueRead(id=customer_type.id, value=customer_type.name),
         ftth64=IdValueRead(id=ftth64.id, value=ftth64.name),
 
         description=customer.description,
@@ -98,8 +227,10 @@ def build_customer_onboard_read(customer_public_id: str, session: Session):
         package=IdValueRead(id=package_.id, value=package_.name),
         monthly_rate=package_.price,
 
+        latest_bill=latest_bill_read,
+
         created_at=customer.created_at,
-        updated_at=customer.updated_at,
+        updated_at=customer.updated_at
     )
 
 
