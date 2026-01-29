@@ -143,6 +143,11 @@ STEP 11 — AUTHENTICATION FLOW
 3. Authorize via Swagger
 4. Access protected endpoints
 
+Authentication design note:
+This application uses long-lived JWT access tokens (1 year expiry).
+This is an explicit usability-driven decision for a private, single-user system.
+The risk surface is limited and acceptable for the deployment context.
+
 --------------------------------------------------
 STEP 12 — CREATE LOOKUP / MASTER DATA
 --------------------------------------------------
