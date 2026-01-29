@@ -56,6 +56,7 @@ def onboard_single_customer(
         upi_id=payload.upi_id,
         village_id=payload.village_id,
         customer_type_id=payload.customer_type_id,
+        ftth64_code=payload.ftth64_code,
         ftth64_id=payload.ftth64_id,
         package_id=payload.package_id,
         description=payload.description,

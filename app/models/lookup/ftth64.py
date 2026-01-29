@@ -39,10 +39,3 @@ class FTTH64(TimestampMixin, SQLModel, table=True):
         nullable=True,
         default=None
         )
-
-    code: str = Field(
-        ...,
-        nullable=False,
-        index=True,
-        max_length=100
-    )

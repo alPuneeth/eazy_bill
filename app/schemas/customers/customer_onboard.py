@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints, field_validator
 from typing import Optional, Annotated
 from datetime import datetime
 
@@ -11,6 +11,14 @@ NameStr = Annotated[
         strip_whitespace=True,
         min_length=1,
         max_length=150
+    )
+]
+
+CodeStr = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        max_length=100
     )
 ]
 
@@ -78,6 +86,15 @@ class CustomerOnboardCreate(BaseModel):
         description="Displays Aadhaar number"
         )
 
+    @field_validator("aadhaar_number")
+    @classmethod
+    def validate_aadhaar(cls, v):
+        if v is None:
+            return v
+        if not v.isdigit() or len(v) != 12 or v[0] in {"0", "1"}:
+            raise ValueError("Please enter a valid 12-digit Aadhaar number")
+        return v
+
     upi_id: Optional[str] = Field(
         default=None,
         title="UPI ID",
@@ -92,6 +109,10 @@ class CustomerOnboardCreate(BaseModel):
     customer_type_id: int = Field(
         title="Customer Type",
         description="Classification of the customer"
+    )
+
+    ftth64_code: CodeStr = Field(
+        title="FTTH64 code of the Customer"
     )
 
     ftth64_id: int = Field(
@@ -161,6 +182,7 @@ class CustomerOnboardRead(BaseModel):
     alternate_number: Optional[str]
     aadhaar_number: Optional[str]
     upi_id: Optional[str]
+    ftth64_code: str
 
     village: IdValueRead
     customer_type: IdValueRead
@@ -192,22 +214,33 @@ class CustomerOnboardRead(BaseModel):
 
 class CustomerOnboardUpdate(BaseModel):
     # ---- Customer ----
-    name: Optional[str] = None
-    phone: Optional[str] = None
-    alternate_number: Optional[str] = None
-    aadhaar_number: Optional[str] = None
+    name: Optional[NameStr] = None
+    phone: Optional[PhoneStr] = None
+    alternate_number: Optional[PhoneStr] = None
+    aadhaar_number: Optional[AadhaarStr] = None
+
+    @field_validator("aadhaar_number")
+    @classmethod
+    def validate_aadhaar(cls, v):
+        if v is None:
+            return v
+        if not v.isdigit() or len(v) != 12 or v[0] in {"0", "1"}:
+            raise ValueError("Please enter a valid 12-digit Aadhaar number")
+        return v
+
     upi_id: Optional[str] = None
     village_id: Optional[int] = None
     customer_type_id: Optional[int] = None
+    ftth64_code: Optional[CodeStr] = None
     ftth64_id: Optional[int] = None
     package_id: Optional[int] = None
     description: Optional[str] = None
 
     # ---- Device ----
-    account_number: Optional[str] = None
+    account_number: Optional[AccountNumberStr] = None
     stb_id: Optional[str] = None
-    vc_number: Optional[str] = None
-    previous_vc_number: Optional[str] = None
+    vc_number: Optional[VCStr] = None
+    previous_vc_number: Optional[VCStr] = None
     tv_name: Optional[str] = None
     tvtype_id: Optional[int] = None
     status_id: Optional[int] = None

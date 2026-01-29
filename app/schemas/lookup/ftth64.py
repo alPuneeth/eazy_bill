@@ -17,10 +17,6 @@ class FTTH64Create(BaseModel):
         "configuration type used for network provisioning."
     )
 
-    code: EmptyStr = Field(
-        title="Ftth64 Code"
-    )
-
     description: Optional[str] = Field(
         default=None
         )
@@ -31,7 +27,6 @@ class FTTH64Read(BaseModel):
 
     id: int
     name: str
-    code: str
     description: Optional[str] = Field(default=None)
 
     created_at: datetime
@@ -40,8 +35,6 @@ class FTTH64Read(BaseModel):
 
 class FTTH64Update(BaseModel):
     name: Optional[EmptyStr] = Field(default=None
-                                        )
-    code: Optional[EmptyStr] = Field(default=None
                                         )
     description: Optional[str] = Field(default=None
                                        )

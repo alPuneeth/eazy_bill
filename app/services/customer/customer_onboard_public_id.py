@@ -223,6 +223,7 @@ def build_customer_onboard_read(customer_public_id: str, session: Session):
 
         tvtype=IdValueRead(id=tvtype.id, value=tvtype.name),
         status=IdValueRead(id=status.id, value=status.name),
+        ftth64_code=customer.ftth64_code,
 
         package=IdValueRead(id=package_.id, value=package_.name),
         monthly_rate=package_.price,
@@ -262,7 +263,7 @@ def patch_customer_onboard(
         k: v for k, v in data.items()
         if k in {
             "name", "phone", "alternate_number", "aadhaar_number",
-            "upi_id", "village_id", "customer_type_id",
+            "upi_id", "village_id", "customer_type_id", "ftth64_code",
             "ftth64_id", "package_id", "description"
         }
     }

@@ -132,6 +132,9 @@ def build_customer_onboard_list(session: Session) -> list[CustomerOnboardRead]:
                     IdValueRead(id=customer_type.id, value=customer_type.name)
                     if customer_type else None
                 ),
+
+                ftth64_code=customer.ftth64_code,
+
                 ftth64=(
                     IdValueRead(id=ftth64.id, value=ftth64.name)
                     if ftth64 else None

@@ -86,6 +86,15 @@ class Customer(TimestampMixin, SQLModel, table=True):
         foreign_key="customertype.id"
         )
 
+    # Code moved from ftth64 SQLModel
+    ftth64_code: str = Field(
+        ...,
+        unique=True,
+        nullable=False,
+        index=True,
+        max_length=100
+    )
+
     # FK → FTTH64
     ftth64_id: int = Field(
         ...,
