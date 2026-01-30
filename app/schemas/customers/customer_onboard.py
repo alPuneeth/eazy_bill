@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field, StringConstraints, field_validator
+from pydantic import (BaseModel, Field, StringConstraints,
+                      field_validator, PydanticUserError
+                      )
 from typing import Optional, Annotated
 from datetime import datetime
 
@@ -86,7 +88,7 @@ class CustomerOnboardCreate(BaseModel):
         description="Displays Aadhaar number"
         )
 
-    @field_validator("aadhaar_number")
+    @field_validator("aadhaar_number", mode="before")
     @classmethod
     def validate_aadhaar(cls, v):
         if v is None:
