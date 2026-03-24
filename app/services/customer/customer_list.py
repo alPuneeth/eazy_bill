@@ -59,8 +59,10 @@ def build_customer_list_query(
         .where(Status.name.in_(device_statuses))
     )
 
-    # 🔐 authorization rule
-    if current_user.role != "admin":
-        stmt = stmt.where(Village.agent_restricted == False)
+    # # 🔐 authorization rule - RBAC
+    if current_user.role == "admin":
+        pass
+    else:
+        stmt = stmt.where(Village.agent_id == current_user.id)
 
     return stmt

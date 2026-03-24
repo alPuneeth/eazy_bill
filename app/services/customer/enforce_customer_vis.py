@@ -12,7 +12,7 @@ def enforce_customer_visibility(
     current_user: User,
     session: Session = Depends(get_session)
 ):
-    if current_user.role != "agent":
+    if current_user.role == "admin":
         return
 
     village = session.exec(
@@ -21,9 +21,12 @@ def enforce_customer_visibility(
 
     if not village:
         # defensive: should never happen if FK integrity is correct
-        return
+        raise HTTPException(
+            status_code=500,
+            detail="Customer linked to invalid village"
+        )
 
-    if village.agent_restricted:
+    if village.agent_id != current_user.id:
         raise HTTPException(
             status_code=403,
             detail="Access to this customer is restricted"

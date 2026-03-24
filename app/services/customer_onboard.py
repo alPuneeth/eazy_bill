@@ -1,6 +1,6 @@
 from app.schemas.customers.customer_onboard import CustomerOnboardCreate
 from sqlmodel import Session
-from sqlalchemy.exc import IntegrityError
+# from sqlalchemy.exc import IntegrityError
 
 
 from app.models.core_models.customer import Customer
@@ -29,8 +29,8 @@ def onboard_single_customer(
     if not village:
         raise ValueError("Invalid village")
 
-    if current_user.role == "agent" and village.agent_restricted:
-        raise PermissionError("Restricted village")
+    # if current_user.role == "agent" and village.agent_restricted:
+    #     raise PermissionError("Restricted village")
 
     if not session.get(CustomerType, payload.customer_type_id):
         raise ValueError("Invalid customer type")
