@@ -37,8 +37,8 @@ def list_device_info(
     )
 
     # enforce restriction at DB level
-    if current_user.role != "admin":
-        stmt = stmt.where(Village.agent_restricted.is_(False))
+    if current_user.role == "agent":
+        stmt = stmt.where(Village.agent_id == current_user.id)
 
     devices = session.exec(stmt).all()
     return [build_deviceinfo_read(d) for d in devices]

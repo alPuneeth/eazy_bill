@@ -15,9 +15,6 @@ from app.services.customer.customer_onboard_public_id import (
     build_customer_onboard_read,
     patch_customer_onboard
     )
-# from app.services.customer.customer_orm import (
-#     build_customer_onboard_read_from_customer
-#     )
 from app.models.core_models.customer import Customer
 from app.models.core_models.user import User
 from app.services.customer.customer_list import build_customer_list_query
@@ -28,7 +25,7 @@ from app.schemas.customers.customer_onboard import (
     CustomerOnboardCreate,
     CustomerOnboardRead,
     CustomerOnboardUpdate,
-    CustomerListRead
+    CustomerListRead                       
 
 )
 
