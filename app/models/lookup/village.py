@@ -2,10 +2,15 @@
 from typing import Optional
 
 # Third-party
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 
 # Local application
 from app.models.utilities import TimestampMixin
+# from app.models.core_models.user import User
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.core_models.user import User
 
 
 class Village(TimestampMixin, SQLModel, table=True):
@@ -54,9 +59,13 @@ class Village(TimestampMixin, SQLModel, table=True):
         nullable=False
         )
 
-    # NEW — agent visibility flag
-    agent_restricted: bool = Field(
-        default=True,
-        nullable=False,
-        description="If True, agent cannot view customers from this village"
+    # ownership of village
+    agent_id: Optional[int] = Field(
+        foreign_key="user.id",
+        default=None,
+        nullable=True,
+        description="Village belongs to this agent"
     )
+
+    # relationship
+    agent: Optional["User"] = Relationship(back_populates="villages")

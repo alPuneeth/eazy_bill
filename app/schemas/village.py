@@ -28,6 +28,11 @@ VillageCodeStr = Annotated[
 ]
 
 
+class AssignVillagesRequest(BaseModel):
+    village_ids: list[int]
+    force: bool = False
+
+
 class VillageCreate(BaseModel):
     name: VillageNameStr = Field(
         title="Village Name",
@@ -38,8 +43,10 @@ class VillageCreate(BaseModel):
         description="Displays postal code of the village"
     )
     village_code: VillageCodeStr
-    agent_restricted: bool = Field(
-        description="If True, agent cannot view customers from this village"
+
+    agent_public_id: Optional[str] = Field(
+        default=None,
+        description="Enforces ownership of Villages"
     )
 
 
@@ -50,7 +57,7 @@ class VillageRead(BaseModel):
     name: str
     postal_code: str
     village_code: str
-    agent_restricted: bool
+    agent_public_id: Optional[str] = None
 
     created_at: datetime
     updated_at: datetime
@@ -66,6 +73,6 @@ class VillageUpdate(BaseModel):
     village_code: Optional[VillageCodeStr] = Field(
         default=None
         )
-    agent_restricted: Optional[bool] = Field(
-        default=None
-        )
+    # agent_public_id: Optional[str] = Field(
+    #     default=None
+    # )
