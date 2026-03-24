@@ -4,10 +4,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import desc
 from datetime import date
 
-
 from app.dependencies.rbac import get_current_user
 from app.services.status_ids import get_active_inactive_status_ids
 from app.services.device_status import sync_device_status_from_bills
+from app.services.bill_service import generate_bill_code
 from app.models.lookup.status import StatusEnum, Status
 
 from app.models.lookup.village import Village
@@ -61,9 +61,13 @@ def list_bills(
         .order_by(desc(Bill.bill_date))
     )
 
-    # 🔐 enforce visibility at DB level
-    if current_user.role == "agent":
-        stmt = stmt.where(Village.agent_restricted == False)
+    # # 🔐 enforce visibility at DB level
+    if current_user.role != "agent":
+        pass
+    
+    else:
+        stmt = stmt.where(Village.agent_id == current_user.id)
+
 
     rows = session.exec(stmt).mappings().all()
 
@@ -90,6 +94,26 @@ def list_bills(
         )
         for r in rows
     ]
+
+
+
+@router.get("/generate_bill_code/{village_code}", response_model=str)
+def get_bill_code(
+    village_code: str,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+                  ):
+    village = session.exec(
+        select(Village).where(Village.village_code == village_code)
+    ).first()
+
+    if not village:
+        raise HTTPException(
+            status_code=404,
+            detail="Village not found"
+        )
+
+    return generate_bill_code(village.id, session)
 
 
 # bill
