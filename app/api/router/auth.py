@@ -18,7 +18,7 @@ def login(
     session: Session = Depends(get_session)
 ):
     """
-    Authenticate a usr and issue an access token.
+    Authenticate a user and issue an access token.
     """
 
     # 1. Fetch user by Username

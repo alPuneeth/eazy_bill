@@ -4,11 +4,16 @@ from enum import Enum
 from datetime import datetime
 
 # third-party
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import Enum as SAEnum, Column
 
 # local module
 from app.models.utilities import TimestampMixin, generate_uuid
+# from app.models.lookup.village import Village
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.lookup.village import Village
 
 
 class UserRole(str, Enum):
@@ -60,12 +65,12 @@ class User(TimestampMixin, SQLModel, table=True):
         nullable=False
         )
 
-    # role is unique - only one fgftradmin and only one staff are allowed
+    # role is unique - only one admin and only one staff are allowed
     role: UserRole = Field(
         ...,
         sa_column=Column(
             SAEnum(UserRole),
-            unique=True)
+            unique=False)
             )
 
     is_active: bool = Field(
@@ -79,3 +84,5 @@ class User(TimestampMixin, SQLModel, table=True):
         default=None,
         nullable=True
         )
+
+    villages: list["Village"]=Relationship(back_populates="agent")

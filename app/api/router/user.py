@@ -3,10 +3,11 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 from app.dependencies.auth import get_current_user
+from app.services.enforce_single_admin import enforce_single_admin
 from app.dependencies.rbac import require_admin
 from app.core.security import get_password_hash
 from app.db.session import get_session
-from app.models.core_models.user import User
+from app.models.core_models.user import User, UserRole
 from app.schemas.user import (
     UserCreate,
     UserRead
@@ -41,7 +42,7 @@ def get_user(
     user = session.exec(
         select(User).where(User.public_id == user_public_id)
     ).first()
-    
+
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
@@ -53,6 +54,9 @@ def create_user(
     payload: UserCreate,
     session: Session = Depends(get_session)
                         ):
+    if payload.role == UserRole.ADMIN:
+        enforce_single_admin(session)
+
     user = User(
         name=payload.name,
         phone=payload.phone,
