@@ -4,7 +4,7 @@ from pydantic import (BaseModel, Field, StringConstraints,
 from typing import Optional, Annotated
 from datetime import datetime
 
-from app.schemas.common import IdValueRead
+from app.schemas.common import IdValueRead, VillageSummary
 from app.schemas.bill import BillRead
 
 NameStr = Annotated[
@@ -186,7 +186,7 @@ class CustomerOnboardRead(BaseModel):
     upi_id: Optional[str]
     ftth64_code: str
 
-    village: IdValueRead
+    village: VillageSummary
     customer_type: IdValueRead
     ftth64: IdValueRead
 
