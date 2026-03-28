@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlmodel import Session, select
+from datetime import datetime, timezone
 
 from app.db.session import get_session
 from app.models.core_models.user import User
@@ -39,7 +40,13 @@ def login(
             detail="Invalid credentials"
         )
 
-    # 3. JWT
+    # 3. Update last login (only on SUCCESS)
+    user.last_login_at = datetime.now(timezone.utc)
+    session.add(user)   # optional but explicit
+    session.commit()    # persist change
+    session.refresh(user)  # ensures updated value is in memory
+
+    # 4. JWT
     access_token = create_access_token(
         data={"sub": user.public_id}
     )
