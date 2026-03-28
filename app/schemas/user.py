@@ -3,6 +3,7 @@ from typing import Optional, Annotated
 from datetime import datetime
 
 from app.models.core_models.user import UserRole
+from app.schemas.village import VillageRead
 
 
 NonEmptyStr = Annotated[
@@ -54,6 +55,7 @@ class UserRead(BaseModel):
     phone: str
     role: UserRole
     is_active: bool
+    villages: list[VillageRead] = []   # Villages assigned to an Agent
     last_login_at: Optional[datetime]
 
     created_at: datetime

@@ -1,8 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import selectinload
 
 from app.dependencies.auth import get_current_user
+<<<<<<< HEAD
+=======
+from app.models.lookup.village import Village
+from app.services.user_village_mapper import to_user_read
+>>>>>>> 0c4b982 (feat: include agent public id in village and user responses via mapping layer)
 from app.services.enforce_single_admin import enforce_single_admin
 from app.dependencies.rbac import require_admin
 from app.core.security import get_password_hash
@@ -29,8 +35,10 @@ def read_me(current_user=Depends(get_current_user)):
 def list_users(
     session: Session = Depends(get_session)
 ):
-    users = session.exec(select(User)).all()
-    return users
+    stmt = select(User).options(selectinload(User.villages).selectinload(Village.agent))
+    users = session.exec(stmt).all()
+
+    return [to_user_read(user) for user in users]
 
 
 @router.get("/{user_public_id}", response_model=UserRead,
@@ -39,9 +47,8 @@ def get_user(
     user_public_id: str,
     session: Session = Depends(get_session)
 ):
-    user = session.exec(
-        select(User).where(User.public_id == user_public_id)
-    ).first()
+    stmt = select(User).where(User.public_id == user_public_id).options(selectinload(User.villages).selectinload(Village.agent))
+    user = session.exec(stmt).first()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

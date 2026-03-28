@@ -73,6 +73,3 @@ class VillageUpdate(BaseModel):
     village_code: Optional[VillageCodeStr] = Field(
         default=None
         )
-    # agent_public_id: Optional[str] = Field(
-    #     default=None
-    # )
