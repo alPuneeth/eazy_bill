@@ -4,11 +4,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
 from app.dependencies.auth import get_current_user
-<<<<<<< HEAD
-=======
 from app.models.lookup.village import Village
 from app.services.user_village_mapper import to_user_read
->>>>>>> 0c4b982 (feat: include agent public id in village and user responses via mapping layer)
 from app.services.enforce_single_admin import enforce_single_admin
 from app.dependencies.rbac import require_admin
 from app.core.security import get_password_hash
