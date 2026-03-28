@@ -2,7 +2,7 @@ from sqlmodel import Session
 from sqlalchemy import select, func, and_
 
 from app.schemas.customers.customer_onboard import CustomerOnboardRead
-from app.schemas.common import IdValueRead
+from app.schemas.common import IdValueRead, VillageSummary
 
 from app.models.core_models.customer import Customer
 from app.models.devices.device_info import DeviceInfo
@@ -125,7 +125,7 @@ def build_customer_onboard_list(session: Session) -> list[CustomerOnboardRead]:
                 upi_id=customer.upi_id,
 
                 village=(
-                    IdValueRead(id=village.id, value=village.name)
+                    VillageSummary(id=village.id, name=village.name, village_code=village.village_code)
                     if village else None
                 ),
                 customer_type=(

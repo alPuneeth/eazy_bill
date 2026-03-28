@@ -9,7 +9,7 @@ from sqlalchemy import select
 from app.schemas.customers.customer_onboard import (
     CustomerOnboardRead, CustomerOnboardUpdate
     )
-from app.schemas.common import IdValueRead
+from app.schemas.common import IdValueRead, VillageSummary
 
 from app.models.core_models.customer import Customer
 from app.models.devices.device_info import DeviceInfo
@@ -117,7 +117,7 @@ def build_customer_onboard_read(customer_public_id: str, session: Session):
         aadhaar_number=customer.aadhaar_number,
         upi_id=customer.upi_id,
 
-        village=IdValueRead(id=village.id, value=village.name),
+        village=VillageSummary(id=village.id, name=village.name, village_code=village.village_code),
         customer_type=IdValueRead(id=customer_type.id, value=customer_type.name),
         ftth64=IdValueRead(id=ftth64.id, value=ftth64.name),
 
