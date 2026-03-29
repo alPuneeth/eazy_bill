@@ -89,3 +89,90 @@ def assign_villages_to_agent_service(
         )
         for v in villages
     ]
+
+
+def replace_villages_to_agent_service(
+        session: Session,
+        agent_public_id: str,
+        village_ids: list[int]
+):
+    village_ids = list(set(village_ids))
+
+    # 1. Fetch + validate agent
+    agent = session.exec(
+        select(User).where(User.public_id == agent_public_id)
+    ).first()
+
+    if not agent:
+        raise HTTPException(404, "Agent not found")
+
+    if agent.role != UserRole.AGENT:
+        raise HTTPException(400, "User is not an agent")
+
+    # 2. Fetch villages (NO relationship load here)
+    villages = session.exec(
+        select(Village).where(Village.id.in_(village_ids))
+    ).all()
+
+    requested_ids = set(village_ids)
+    found_ids = {v.id for v in villages}
+
+    missing_ids = requested_ids - found_ids
+
+    if missing_ids:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Villages not found: {list(missing_ids)}"
+        )
+
+    if not villages:
+        raise HTTPException(404, "No villages found")
+    
+    # 3. fetch current assignments
+    current_villages = session.exec(
+        select(Village).where(Village.agent_id == agent.id)
+    ).all()
+
+    current_ids = {v.id for v in current_villages}
+    new_ids = set(village_ids)
+
+    # 4. compute diff
+    to_remove_ids = current_ids - new_ids   # villages to unassign
+    to_add_ids = new_ids - current_ids      # villages to assign 
+    
+    # 5. unassing removed villages
+    for v in current_villages:
+        if v.id in to_remove_ids:
+            v.agent_id = None
+
+    # 6. Assign new villages
+    for v in villages:
+        v.agent_id = agent.id
+
+    # 7. Commit
+    try:
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(409, "Replacement failed")
+
+    # 8. Re-fetch with relationship
+    villages = session.exec(
+        select(Village)
+        .options(selectinload(Village.agent))
+        .where(Village.id.in_(village_ids))
+    ).all()
+
+    # 9. Return mapped response
+    return [
+        VillageRead(
+            id=v.id,
+            name=v.name,
+            postal_code=v.postal_code,
+            village_code=v.village_code,
+            agent_public_id=v.agent.public_id if v.agent else None,
+            created_at=v.created_at,
+            updated_at=v.updated_at
+        )
+        for v in villages
+    ]

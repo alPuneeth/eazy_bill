@@ -28,6 +28,10 @@ VillageCodeStr = Annotated[
 ]
 
 
+class ReplaceVillagesRequest(BaseModel):
+    village_ids: list[int]
+
+
 class AssignVillagesRequest(BaseModel):
     village_ids: list[int]
     force: bool = False
@@ -44,10 +48,10 @@ class VillageCreate(BaseModel):
     )
     village_code: VillageCodeStr
 
-    agent_public_id: Optional[str] = Field(
-        default=None,
-        description="Enforces ownership of Villages"
-    )
+    # agent_public_id: Optional[str] = Field(
+    #     default=None,
+    #     description="Enforces ownership of Villages"
+    # )
 
 
 class VillageRead(BaseModel):
