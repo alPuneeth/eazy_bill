@@ -2,12 +2,13 @@ from fastapi import Depends, HTTPException, status
 from sqlmodel import Session, select
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
+from typing import Optional
 
 from app.db.session import get_session
 from app.auth.jw import SECRET_KEY, ALGORITHM
 from app.models.core_models.user import User
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 
 def get_current_user(
@@ -42,3 +43,23 @@ def get_current_user(
         raise credentials_exception
 
     return user
+
+
+def get_current_user_optional(
+        credentials: HTTPAuthorizationCredentials = Depends(security),
+        session: Session = Depends(get_session)
+) -> Optional[User]:
+
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_public_id = payload.get("sub")
+
+        if not user_public_id:
+            return None
+        return session.exec(
+            select(User).where(User.public_id == user_public_id)
+        ).first()
+    
+    except Exception:
+        return None
