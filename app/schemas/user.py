@@ -75,6 +75,6 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = Field(
         default=None
         )
-    last_login_at: Optional[datetime] = Field(
-        default=None
-        )
+    # last_login_at: Optional[datetime] = Field(
+    #     default=None
+    #     )

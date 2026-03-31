@@ -13,7 +13,8 @@ from app.db.session import get_session
 from app.models.core_models.user import User, UserRole
 from app.schemas.user import (
     UserCreate,
-    UserRead
+    UserRead,
+    UserUpdate
 )
 
 router = APIRouter(
@@ -52,7 +53,7 @@ def get_user(
     return user
 
 
-@router.post("/", response_model=UserRead,
+@router.post("/create", response_model=UserRead,
              dependencies=[Depends(require_admin)])
 def create_user(
     payload: UserCreate,
@@ -81,3 +82,53 @@ def create_user(
         )
     session.refresh(user)
     return user
+
+
+@router.patch("/update/{user_public_id}",
+              response_model=UserRead,
+              dependencies=[Depends(require_admin)])
+def update_user(
+    user_public_id: str,
+    payload: UserUpdate,
+    session: Session = Depends(get_session),
+):
+    user = session.exec(
+        select(User).where(User.public_id == user_public_id)
+    ).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    update_data = payload.model_dump(exclude_unset=True)
+
+    if not update_data:
+        raise HTTPException(
+            status_code=400,
+            detail="No fields provided for update"
+        )
+
+    user.sqlmodel_update(update_data)
+    # better alternative to the following:
+    # for key, value in update_data.items():
+    #    setattr(user, key, value)
+    
+    try:
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+    
+    except IntegrityError:
+        session.rollback()
+
+        raise HTTPException(
+            status_code=409,
+            detail="Constraint violation"
+            )
+    
+    except Exception:
+        session.rollback()
+        raise HTTPException(status_code=500, detail="Unexpected database error")
+    
+    return user
+
+
