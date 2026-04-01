@@ -22,6 +22,7 @@ def generate_bill_code(village_id: int, session: Session):
 
     """
     current_year = datetime.now().year
+    current_year_short = current_year % 100
 
     # Step 1: fetch Village
     village = session.get(Village, village_id)
@@ -44,7 +45,7 @@ def generate_bill_code(village_id: int, session: Session):
     ).first()
 
     if not latest_bill:
-        return f"{village.village_code}-{current_year}-0001"
+        return f"{village.village_code}{current_year_short:02d}-001"
 
     # Step 3: Parse and increment counter
 
@@ -55,4 +56,4 @@ def generate_bill_code(village_id: int, session: Session):
         last_counter = 0
 
     next_counter = last_counter + 1
-    return f"{village.village_code}-{current_year}-{next_counter:04d}"
+    return f"{village.village_code}{current_year_short:02d}-{next_counter:03d}"
