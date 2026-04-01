@@ -10,7 +10,7 @@ from app.models.lookup.village import Village
 def enforce_customer_visibility(
     customer: Customer,
     current_user: User,
-    session: Session = Depends(get_session)
+    session: Session
 ):
     if current_user.role == "admin":
         return

@@ -106,6 +106,16 @@ def update_user(
             status_code=400,
             detail="No fields provided for update"
         )
+    # --- enforce role rules ---
+    if user.role == UserRole.ADMIN:
+        update_data["user_code"] = "KVR"
+
+    elif user.role == UserRole.TEST_USER:
+        update_data["user_code"] = "TST"
+
+    elif user.role == UserRole.AGENT:
+        if "user_code" in update_data:
+            update_data["user_code"] = update_data["user_code"].upper()
 
     user.sqlmodel_update(update_data)
     # better alternative to the following:

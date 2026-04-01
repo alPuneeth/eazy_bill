@@ -6,9 +6,10 @@ from sqlalchemy import func
 from app.models.core_models.customer import Customer
 from app.models.bill.bill import Bill
 from app.models.lookup.village import Village
+from app.models.core_models.user import User
 
 
-def generate_bill_code(village_id: int, session: Session):
+def generate_bill_code(village_id: int, session: Session, current_user: User):
     """
     returns a new bill_code if there are no previous bills for a Customer else 
     the bill_code from the latest bill is incremented by 1
@@ -45,7 +46,7 @@ def generate_bill_code(village_id: int, session: Session):
     ).first()
 
     if not latest_bill:
-        return f"{village.village_code}{current_year_short:02d}-001"
+        return f"{village.village_code}{current_user.user_code}{current_year_short:02d}-001"
 
     # Step 3: Parse and increment counter
 
@@ -56,4 +57,4 @@ def generate_bill_code(village_id: int, session: Session):
         last_counter = 0
 
     next_counter = last_counter + 1
-    return f"{village.village_code}{current_year_short:02d}-{next_counter:03d}"
+    return f"{village.village_code}{current_user.user_code}{current_year_short:02d}-{next_counter:03d}"

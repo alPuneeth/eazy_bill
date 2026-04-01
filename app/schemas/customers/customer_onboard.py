@@ -113,7 +113,8 @@ class CustomerOnboardCreate(BaseModel):
         description="Classification of the customer"
     )
 
-    ftth64_code: CodeStr = Field(
+    ftth_8: Optional[CodeStr] = Field(
+        default=None,
         title="FTTH64 code of the Customer"
     )
 
@@ -128,14 +129,17 @@ class CustomerOnboardCreate(BaseModel):
     description: Optional[str] = Field(
         default=None
         )
-    account_number: AccountNumberStr = Field(
+    account_number: Optional[AccountNumberStr] = Field(
+        default=None,
         title="Account Number",
     )
-    stb_id: str = Field(
+    stb_id: Optional[str] = Field(
+        default=None,
         title="STB id",
         description="Set Top Box id"
     )
     vc_number: VCStr = Field(
+        ...,
         title="VC number",
         description="Viewing Card number"
     )
@@ -150,10 +154,13 @@ class CustomerOnboardCreate(BaseModel):
         default=None,
         title="TV name"
     )
-    tvtype_id: int = Field(
+    tvtype_id: Optional[int] = Field(
+        default=None,
         title="TVType"
         )
+
     status_id: int = Field(
+        ...,
         title="Status"
         )
 
@@ -181,25 +188,25 @@ class CustomerOnboardRead(BaseModel):
     public_id: str
     name: str
     phone: str
-    alternate_number: Optional[str]
-    aadhaar_number: Optional[str]
-    upi_id: Optional[str]
-    ftth64_code: str
+    alternate_number: Optional[str] = None
+    aadhaar_number: Optional[str] = None
+    upi_id: Optional[str] = None
+    ftth_8: Optional[str] = None
 
     village: VillageSummary
     customer_type: IdValueRead
     ftth64: IdValueRead
 
-    description: Optional[str]
+    description: Optional[str] = None
 
     # ---------- Device ----------
-    account_number: str
-    stb_id: str
+    account_number: Optional[str] = None
+    stb_id: Optional[str] = None
     vc_number: str
-    previous_vc_number: Optional[str]
-    tv_name: Optional[NameStr]
+    previous_vc_number: Optional[str] = None
+    tv_name: Optional[str] = None
 
-    tvtype: IdValueRead
+    tvtype: Optional[IdValueRead] = None
     status: IdValueRead
 
     # ---------- CurrentPackage ----------

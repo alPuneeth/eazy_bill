@@ -5,7 +5,7 @@ from app.schemas.reports.customer_status_summary_vil import (
     VillageCustomerStatusSummary
 )
 from app.models.core_models.customer import Customer
-from app.models.core_models.user import User
+from app.models.core_models.user import User, UserRole
 from app.models.lookup.village import Village
 from app.models.lookup.status import Status
 from app.models.devices.device_info import DeviceInfo
@@ -44,8 +44,8 @@ def get_customer_status_summary(
     )
 
     # RBAC FILTER — AGENT RESTRICTION
-    if current_user.role == "agent":
-        stmt = stmt.where(Village.agent_restricted == False)
+    if current_user.role == UserRole.AGENT:
+        stmt = stmt.where(Village.agent_id == current_user.id)
 
     stmt = stmt.group_by(Village.name).order_by(Village.name)
 

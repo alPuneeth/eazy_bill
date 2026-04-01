@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 from typing import Optional, Annotated
 from datetime import datetime
 
@@ -19,10 +19,18 @@ PhoneStr = Annotated[
                 str,
                 StringConstraints(
                     strip_whitespace=True,
-                    max_length=15
+                    pattern=r"^\d{10,15}$"
                     )
                 ]
 
+UserCodeStr = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=3,
+        max_length=3
+    )
+]
 
 class UserCreate(BaseModel):
     name: NonEmptyStr = Field(
@@ -43,6 +51,24 @@ class UserCreate(BaseModel):
             "examples": ["ADMIN", "AGENT"]
         }
                        )
+    
+    user_code: Optional[UserCodeStr] = None
+
+    @model_validator(mode="after")
+    def validate_user_code(self):
+        if self.role == UserRole.ADMIN:
+            self.user_code = "KVR"
+
+        elif self.role == UserRole.TEST_USER:
+            self.user_code = "TST"
+
+        elif self.role == UserRole.AGENT:
+            if self.user_code is None:
+                raise ValueError("user_code is required for AGENT role")
+        
+            self.user_code = self.user_code.upper()
+
+        return self
 
 
 class UserRead(BaseModel):
@@ -55,8 +81,9 @@ class UserRead(BaseModel):
     phone: str
     role: UserRole
     is_active: bool
-    villages: list[VillageRead] = []   # Villages assigned to an Agent
-    last_login_at: Optional[datetime]
+    user_code: UserCodeStr
+    villages: list[VillageRead] = Field(default_factory=list)   # Villages assigned to an Agent
+    last_login_at: Optional[datetime] = None
 
     created_at: datetime
     updated_at: datetime
@@ -69,12 +96,13 @@ class UserUpdate(BaseModel):
     phone: Optional[PhoneStr] = Field(
         default=None
         )
-    # role: Optional[UserRole] = Field(
-    #     default=None
-    #     )
+
     is_active: Optional[bool] = Field(
         default=None
         )
-    # last_login_at: Optional[datetime] = Field(
-    #     default=None
-    #     )
+    
+    user_code: Optional[UserCodeStr] = Field(
+        default=None
+    )
+
+

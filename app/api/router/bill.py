@@ -113,7 +113,7 @@ def get_bill_code(
             detail="Village not found"
         )
 
-    return generate_bill_code(village.id, session)
+    return generate_bill_code(village.id, session, current_user)
 
 
 # bill
