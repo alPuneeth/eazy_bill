@@ -87,8 +87,8 @@ class Customer(TimestampMixin, SQLModel, table=True):
         )
 
     # Code moved from ftth64 SQLModel
-    ftth64_code: str = Field(
-        ...,
+    ftth_8: Optional[str] = Field(
+        default=None,
         unique=True,
         nullable=False,
         index=True,

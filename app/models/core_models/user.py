@@ -5,7 +5,7 @@ from datetime import datetime
 
 # third-party
 from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import Enum as SAEnum, Column
+from sqlalchemy import Enum as SAEnum, Column, String
 
 # local module
 from app.models.utilities import TimestampMixin, generate_uuid
@@ -49,8 +49,7 @@ class User(TimestampMixin, SQLModel, table=True):
     name: str = Field(
         ...,
         nullable=False,
-        max_length=150,
-        unique=True
+        max_length=150
         )
 
     phone: str = Field(
@@ -65,7 +64,7 @@ class User(TimestampMixin, SQLModel, table=True):
         nullable=False
         )
 
-    # role is unique - only one admin and only one staff are allowed
+    # role is unique - only one admin and multiple staff are allowed
     role: UserRole = Field(
         ...,
         sa_column=Column(
@@ -77,6 +76,16 @@ class User(TimestampMixin, SQLModel, table=True):
         default=True,
         nullable=False
         )
+    
+    user_code: Optional[str] = Field(
+        default=None,
+        max_length=3,
+        sa_column=Column(
+            String(3),
+            nullable=True,
+            index=True,
+            unique=True
+    ))
 
     # Timestamp of the user's last successful login
     # remember to manually refresh before committing to DB

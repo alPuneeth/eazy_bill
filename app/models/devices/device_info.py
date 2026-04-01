@@ -49,16 +49,16 @@ class DeviceInfo(TimestampMixin, SQLModel, table=True):
         foreign_key="customer.id"
         )
 
-    account_number: str = Field(
-        ...,
+    account_number: Optional[str] = Field(
+        default=None,
         index=True,
         unique=True,
         nullable=False,
         max_length=100
         )
 
-    stb_id: str = Field(
-        ...,
+    stb_id: Optional[str] = Field(
+        default=None,
         index=True,
         nullable=False,
         )
@@ -84,15 +84,16 @@ class DeviceInfo(TimestampMixin, SQLModel, table=True):
     )
 
     # FK → TV Type
-    tvtype_id: int = Field(
-        ...,
-        nullable=False,
+    tvtype_id: Optional[int] = Field(
+        default=None,
+        nullable=True,
         index=True,
         foreign_key="tvtype.id"
         )
 
     # FK → Status
     status_id: int = Field(
+        ...,
         nullable=False,
         index=True,
         foreign_key="status.id",
