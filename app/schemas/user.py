@@ -69,9 +69,9 @@ class UserUpdate(BaseModel):
     phone: Optional[PhoneStr] = Field(
         default=None
         )
-    role: Optional[UserRole] = Field(
-        default=None
-        )
+    # role: Optional[UserRole] = Field(
+    #     default=None
+    #     )
     is_active: Optional[bool] = Field(
         default=None
         )

@@ -94,9 +94,9 @@ def get_customer(
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
 
-    enforce_customer_visibility(customer, current_user, session)
+    # enforce_customer_visibility(customer, current_user, session)
 
-    return build_customer_onboard_read(customer_public_id, session)
+    return build_customer_onboard_read(customer_public_id, session, current_user)
 
 
 # POST - single payload
@@ -136,7 +136,7 @@ def create_customer(
             status_code=status.HTTP_409_CONFLICT,
             detail="Duplicate or constraint violation"
         )
-    return build_customer_onboard_read(customer.public_id, session)
+    return build_customer_onboard_read(customer.public_id, session, current_user)
 
 
 @router.post("/create/bulk",
@@ -162,7 +162,7 @@ def create_customers_bulk(
             session.refresh(customer)
 
             success.append(
-                build_customer_onboard_read(customer.public_id, session)
+                build_customer_onboard_read(customer.public_id, session, current_user)
             )
 
         except Exception as e:
@@ -198,10 +198,10 @@ def update_customer(
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
 
-    enforce_customer_visibility(customer, current_user, session)
+    # enforce_customer_visibility(customer, current_user, session)
 
     try:
-        patch_customer_onboard(customer_public_id, payload, session)
+        patch_customer_onboard(customer_public_id, payload, session, current_user)
 
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -209,4 +209,4 @@ def update_customer(
         session.rollback()
         raise HTTPException(status_code=409, detail="Constraint violation")
 
-    return build_customer_onboard_read(customer_public_id, session)
+    return build_customer_onboard_read(customer_public_id, session, current_user)

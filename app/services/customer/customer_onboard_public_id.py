@@ -6,6 +6,7 @@ from sqlmodel import Session
 from fastapi import HTTPException
 from sqlalchemy import select
 
+from app.services.customer.enforce_customer_vis import enforce_customer_visibility
 from app.schemas.customers.customer_onboard import (
     CustomerOnboardRead, CustomerOnboardUpdate
     )
@@ -24,7 +25,7 @@ from app.schemas.bill import BillRead
 from app.models.core_models.user import User 
 
 
-def build_customer_onboard_read(customer_public_id: str, session: Session):
+def build_customer_onboard_read(customer_public_id: str, session: Session, current_user: User):
     """
     Optimized single-customer onboard read.
 
@@ -70,6 +71,8 @@ def build_customer_onboard_read(customer_public_id: str, session: Session):
         tvtype,
         status,
     ) = row
+
+    enforce_customer_visibility(customer, current_user, session)
 
     # -------- Fetch latest bill (explicit & safe) --------
     bill_row = session.execute(
@@ -147,6 +150,7 @@ def patch_customer_onboard(
     customer_public_id: str,
     payload: CustomerOnboardUpdate,
     session: Session,
+    current_user: User
 ):
     # Fetch customer
     customer = session.execute(
@@ -155,6 +159,8 @@ def patch_customer_onboard(
 
     if not customer:
         raise ValueError("Customer not found")
+    
+    enforce_customer_visibility(customer, current_user, session)
 
     # Fetch device (single active device assumption)
     device = session.execute(
