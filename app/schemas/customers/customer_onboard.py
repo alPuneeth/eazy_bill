@@ -195,7 +195,7 @@ class CustomerOnboardRead(BaseModel):
 
     village: VillageSummary
     customer_type: IdValueRead
-    ftth64: IdValueRead
+    ftth64: Optional[IdValueRead] = None
 
     description: Optional[str] = None
 
@@ -240,7 +240,7 @@ class CustomerOnboardUpdate(BaseModel):
     upi_id: Optional[str] = None
     village_id: Optional[int] = None
     customer_type_id: Optional[int] = None
-    ftth64_code: Optional[CodeStr] = None
+    ftth_8: Optional[CodeStr] = None
     ftth64_id: Optional[int] = None
     package_id: Optional[int] = None
     description: Optional[str] = None
