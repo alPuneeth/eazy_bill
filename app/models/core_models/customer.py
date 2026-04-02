@@ -90,7 +90,7 @@ class Customer(TimestampMixin, SQLModel, table=True):
     ftth_8: Optional[str] = Field(
         default=None,
         unique=True,
-        nullable=False,
+        nullable=True,
         index=True,
         max_length=100
     )

@@ -53,14 +53,14 @@ class DeviceInfo(TimestampMixin, SQLModel, table=True):
         default=None,
         index=True,
         unique=True,
-        nullable=False,
+        nullable=True,
         max_length=100
         )
 
     stb_id: Optional[str] = Field(
         default=None,
         index=True,
-        nullable=False,
+        nullable=True,
         )
 
     vc_number: str = Field(
@@ -80,6 +80,7 @@ class DeviceInfo(TimestampMixin, SQLModel, table=True):
     tv_name: Optional[str] = Field(
         default=None,
         max_length=100,
+        nullable=True,
         description="Brand or manufacturer of the TV"
     )
 
