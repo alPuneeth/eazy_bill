@@ -81,7 +81,7 @@ class UserRead(BaseModel):
     phone: str
     role: UserRole
     is_active: bool
-    user_code: UserCodeStr
+    user_code: Optional[UserCodeStr] = None
     villages: list[VillageRead] = Field(default_factory=list)   # Villages assigned to an Agent
     last_login_at: Optional[datetime] = None
 
@@ -104,5 +104,10 @@ class UserUpdate(BaseModel):
     user_code: Optional[UserCodeStr] = Field(
         default=None
     )
+    @model_validator(mode="after")
+    def validate_user_code_update(self):
+        if self.user_code is not None:
+            self.user_code = self.user_code.upper()
+        return self
 
 

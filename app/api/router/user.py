@@ -66,6 +66,7 @@ def create_user(
         name=payload.name,
         phone=payload.phone,
         role=payload.role,
+        user_code=payload.user_code, 
         hashed_password=get_password_hash(payload.password)
     )
 
@@ -107,15 +108,25 @@ def update_user(
             detail="No fields provided for update"
         )
     # --- enforce role rules ---
-    if user.role == UserRole.ADMIN:
-        update_data["user_code"] = "KVR"
+    # if user.role == UserRole.ADMIN:
+    #     update_data["user_code"] = "KVR"
+    if "user_code" in update_data and user.role == UserRole.ADMIN:
+        raise HTTPException(
+            status_code=400,
+            detail="user_code cannot be modified for this role"
+        )
 
     elif user.role == UserRole.TEST_USER:
-        update_data["user_code"] = "TST"
+        if "user_code" in update_data:
+            update_data["user_code"] = "TST"
 
     elif user.role == UserRole.AGENT:
-        if "user_code" in update_data:
-            update_data["user_code"] = update_data["user_code"].upper()
+        if ("user_code" not in update_data or not update_data["user_code"]):
+            raise HTTPException(
+                status_code=400,
+                detail="user_code is required for AGENT"
+        )
+        update_data["user_code"] = update_data["user_code"].upper()
 
     user.sqlmodel_update(update_data)
     # better alternative to the following:

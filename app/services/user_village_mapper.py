@@ -10,6 +10,7 @@ def to_user_read(user: User) -> UserRead:
         phone=user.phone,
         role=user.role,
         is_active=user.is_active,
+        user_code=user.user_code,
         villages=[to_village_read(v) for v in user.villages],
         created_at=user.created_at,
         updated_at=user.updated_at,

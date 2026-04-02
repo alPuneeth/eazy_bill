@@ -12,7 +12,7 @@ from app.db.session import engine
 from app.api.api_router import api_router
 
 
-app = FastAPI( debug=settings.debug)  # title=settings.app_name | debug=settings.debug
+app = FastAPI(debug=settings.debug)  # title=settings.app_name | debug=settings.debug
 
 app.include_router(api_router)
 
