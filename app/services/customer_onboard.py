@@ -44,8 +44,9 @@ def onboard_single_customer(
     if not session.get(Status, payload.status_id):
         raise ValueError("Invalid status")
 
-    if not session.get(TVType, payload.tvtype_id):
-        raise ValueError("Invalid TV type")
+    if payload.tvtype_id is not None:
+        if not session.get(TVType, payload.tvtype_id):
+            raise ValueError("Invalid TV type")
 
     # 1. Customer
     customer = Customer(
@@ -56,7 +57,7 @@ def onboard_single_customer(
         upi_id=payload.upi_id,
         village_id=payload.village_id,
         customer_type_id=payload.customer_type_id,
-        ftth64_code=payload.ftth64_code,
+        ftth_8=payload.ftth_8,
         ftth64_id=payload.ftth64_id,
         package_id=payload.package_id,
         description=payload.description,

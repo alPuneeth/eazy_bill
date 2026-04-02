@@ -51,7 +51,7 @@ def build_customer_onboard_read(customer_public_id: str, session: Session, curre
         .join(FTTH64, FTTH64.id == Customer.ftth64_id)
         .join(Package, Package.id == Customer.package_id)
         .join(DeviceInfo, DeviceInfo.customer_id == Customer.id)
-        .join(TVType, TVType.id == DeviceInfo.tvtype_id)
+        .outerjoin(TVType, TVType.id == DeviceInfo.tvtype_id)
         .join(Status, Status.id == DeviceInfo.status_id)
         .where(Customer.public_id == customer_public_id)
     )
@@ -132,9 +132,9 @@ def build_customer_onboard_read(customer_public_id: str, session: Session, curre
         previous_vc_number=device.previous_vc_number,
         tv_name=device.tv_name,
 
-        tvtype=IdValueRead(id=tvtype.id, value=tvtype.name),
+        tvtype=IdValueRead(id=tvtype.id, value=tvtype.name) if tvtype else None,
         status=IdValueRead(id=status.id, value=status.name),
-        ftth64_code=customer.ftth64_code,
+        ftth_8=customer.ftth_8,
 
         package=IdValueRead(id=package_.id, value=package_.name),
         monthly_rate=package_.price,
@@ -172,12 +172,17 @@ def patch_customer_onboard(
 
     data = payload.model_dump(exclude_unset=True)
 
+    if "tvtype_id" in data and data["tvtype_id"] is not None:
+        tvtype = session.get(TVType, data["tvtype_id"])
+        if not tvtype:
+            raise HTTPException(400, "Invalid TV type")
+
     # ---- Split payload ----
     customer_fields = {
         k: v for k, v in data.items()
         if k in {
             "name", "phone", "alternate_number", "aadhaar_number",
-            "upi_id", "village_id", "customer_type_id", "ftth64_code",
+            "upi_id", "village_id", "customer_type_id", "ftth_8",
             "ftth64_id", "package_id", "description"
         }
     }
