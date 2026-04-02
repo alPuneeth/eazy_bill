@@ -60,11 +60,7 @@ def get_village(
     if not village:
         raise HTTPException(status_code=404, detail="Village not found")
 
-    # if current_user.role != "admin" and village.agent_restricted:
-    #     raise HTTPException(
-    #         status_code=403,
-    #         detail="Access to this village is restricted"
-    #     )
+
     return to_village_read(village)
 
 
