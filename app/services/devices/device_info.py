@@ -19,7 +19,12 @@ def build_deviceinfo_read(device: DeviceInfo) -> DeviceInfoRead:
     """
 
     status = cast(Status, device.status)
-    tvtype = cast(TVType, device.tvtype)
+    tvtype_read = None
+    if device.tvtype:
+        tvtype_read = IdValueRead(
+            id=device.tvtype.id,
+            value=device.tvtype.name
+        )
 
     return DeviceInfoRead(
         public_id=device.public_id,
@@ -33,10 +38,7 @@ def build_deviceinfo_read(device: DeviceInfo) -> DeviceInfoRead:
         # derived / relationship-based fields
         customer_public_id=device.customer.public_id,
 
-        tvtype=IdValueRead(
-            id=cast(int, tvtype.id),
-            value=device.tvtype.name
-        ),
+        tvtype=tvtype_read,
 
         status=IdValueRead(
             id=cast(int, status.id),
