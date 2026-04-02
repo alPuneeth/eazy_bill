@@ -68,7 +68,9 @@ class User(TimestampMixin, SQLModel, table=True):
     role: UserRole = Field(
         ...,
         sa_column=Column(
-            SAEnum(UserRole),
+            SAEnum(UserRole,
+                   name="userrole",
+                   native_enum=True),
             unique=False)
             )
 
@@ -77,12 +79,12 @@ class User(TimestampMixin, SQLModel, table=True):
         nullable=False
         )
     
-    user_code: Optional[str] = Field(
-        default=None,
+    user_code: str = Field(
+        ...,
         max_length=3,
         sa_column=Column(
             String(3),
-            nullable=True,
+            nullable=False,
             index=True,
             unique=True
     ))
