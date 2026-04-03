@@ -40,13 +40,13 @@ router = APIRouter(
 @router.get(
         "/all",
         response_model=list[CustomerOnboardRead],
-        summary="List all customers",
-        dependencies=[Depends(require_admin)]
+        summary="List all customers"
             )
 def list_all_customers(
+    current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
-):
-    return build_customer_onboard_list(session)
+    ):
+    return build_customer_onboard_list(session, current_user)
 
 
 # ACTIVE + INACTIVE - card view

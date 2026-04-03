@@ -14,10 +14,10 @@ from app.models.lookup.status import Status
 from app.models.lookup.package import Package
 from app.models.bill.bill import Bill
 from app.schemas.bill import BillRead
-from app.models.core_models.user import User
+from app.models.core_models.user import User, UserRole
 
 
-def build_customer_onboard_list(session: Session) -> list[CustomerOnboardRead]:
+def build_customer_onboard_list(session: Session, current_user:User) -> list[CustomerOnboardRead]:
     """
     Single-query, full customer read for list endpoints.
 
@@ -71,6 +71,9 @@ def build_customer_onboard_list(session: Session) -> list[CustomerOnboardRead]:
         .outerjoin(User, User.id == Bill.created_by_id)
         .order_by(Customer.created_at.desc())
     )
+
+    if current_user.role == UserRole.AGENT:
+        stmt = stmt.where(Village.agent_id == current_user.id)
 
     rows = session.execute(stmt).all()
 
