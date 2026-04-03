@@ -6,7 +6,7 @@ from sqlalchemy import func
 from app.models.core_models.customer import Customer
 from app.models.bill.bill import Bill
 from app.models.lookup.village import Village
-from app.models.core_models.user import User
+from app.models.core_models.user import User, UserRole
 
 
 def generate_bill_code(village_id: int, session: Session, current_user: User):
@@ -31,6 +31,13 @@ def generate_bill_code(village_id: int, session: Session, current_user: User):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Village not found"
+        )
+    
+    # RBAC check
+    if current_user.role == UserRole.AGENT and village.agent_id != current_user.id:
+        raise HTTPException(
+            status_code=403,
+            detail="Access to this village is restricted!"
         )
 
     # Step 2: Fetch latest bill for this village in current year
