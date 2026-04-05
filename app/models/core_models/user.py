@@ -70,8 +70,11 @@ class User(TimestampMixin, SQLModel, table=True):
         sa_column=Column(
             SAEnum(UserRole,
                    name="userrole",
-                   native_enum=True),
-            unique=False)
+                   native_enum=True,
+                   values_callable=lambda enum: [e.value for e in enum] 
+                   ),
+            unique=False,
+            nullable=False)
             )
 
     is_active: bool = Field(

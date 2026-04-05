@@ -13,6 +13,10 @@ if TYPE_CHECKING:
     from app.models.devices.device_info import DeviceInfo
 
 
+def enum_values(enum):
+    return [e.value for e in enum]
+
+
 class StatusEnum(str, Enum):
     """
     StatusEnum defines the allowed lifecycle states
@@ -47,7 +51,10 @@ class Status(TimestampMixin, SQLModel, table=True):
     # Unique to enforce one row per status value
     name: StatusEnum = Field(
         ...,
-        sa_column=Column(SAEnum(StatusEnum),
+        sa_column=Column(SAEnum(StatusEnum,
+                                name="statusenum",
+                                values_callable=enum_values,
+                                native_enum=True),
                          unique=True,
                          nullable=False,
                          )

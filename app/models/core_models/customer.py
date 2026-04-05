@@ -86,8 +86,7 @@ class Customer(TimestampMixin, SQLModel, table=True):
         foreign_key="customertype.id"
         )
 
-    # Code moved from ftth64 SQLModel
-    ftth_8: Optional[str] = Field(
+    ftth8_code: Optional[str] = Field(
         default=None,
         unique=True,
         nullable=True,
@@ -121,7 +120,6 @@ class Customer(TimestampMixin, SQLModel, table=True):
         back_populates="customer"
         )
 
-    # Relationship to Package (read convenience only)
     package: Optional["Package"] = Relationship()
     village: Optional[Village] = Relationship()
     ftth64: Optional[FTTH64] = Relationship()

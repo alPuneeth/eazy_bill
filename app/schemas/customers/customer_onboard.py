@@ -113,7 +113,7 @@ class CustomerOnboardCreate(BaseModel):
         description="Classification of the customer"
     )
 
-    ftth_8: Optional[CodeStr] = Field(
+    ftth8_code: Optional[CodeStr] = Field(
         default=None,
         title="FTTH64 code of the Customer"
     )
@@ -191,7 +191,7 @@ class CustomerOnboardRead(BaseModel):
     alternate_number: Optional[str] = None
     aadhaar_number: Optional[str] = None
     upi_id: Optional[str] = None
-    ftth_8: Optional[str] = None
+    ftth8_code: Optional[str] = None
 
     village: VillageSummary
     customer_type: IdValueRead
@@ -240,7 +240,7 @@ class CustomerOnboardUpdate(BaseModel):
     upi_id: Optional[str] = None
     village_id: Optional[int] = None
     customer_type_id: Optional[int] = None
-    ftth_8: Optional[CodeStr] = None
+    ftth8_code: Optional[CodeStr] = None
     ftth64_id: Optional[int] = None
     package_id: Optional[int] = None
     description: Optional[str] = None

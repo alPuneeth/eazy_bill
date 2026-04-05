@@ -10,6 +10,10 @@ from sqlalchemy import Enum as SAEnum, Column
 from app.models.utilities import TimestampMixin, generate_uuid
 
 
+def enum_values(enum):
+    return [e.value for e in enum]
+
+
 class CustomerTypeEnum(str, Enum):
     """
     CustomerTypeEnum defines the allowed classifications
@@ -50,7 +54,12 @@ class CustomerType(TimestampMixin, SQLModel, table=True):
     name: CustomerTypeEnum = Field(
         ...,
         sa_column=Column(
-            SAEnum(CustomerTypeEnum),
+            SAEnum(
+                CustomerTypeEnum,
+                name="customertypeenum",
+                values_callable=enum_values,
+                native_enum=True
+                ),
             nullable=False,
             unique=True
             )

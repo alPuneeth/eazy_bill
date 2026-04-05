@@ -136,7 +136,7 @@ def build_customer_onboard_list(session: Session, current_user:User) -> list[Cus
                     if customer_type else None
                 ),
 
-                ftth_8=customer.ftth_8,
+                ftth8_code=customer.ftth8_code,
 
                 ftth64=(
                     IdValueRead(id=ftth64.id, value=ftth64.name)
