@@ -5,3 +5,4 @@ venv/
 .vscode/
 .DS_Store
 *.log 
+read_me_dev.txt
