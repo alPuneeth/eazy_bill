@@ -1,4 +1,5 @@
-SECRET_KEY = "bgKqT4TjuMBwptyspMbnoWHnuub9lECHyhuBFe-"\
-"zlsblzIday4JgfKixk1LBFOVfxZxirnySDf_TGcTPnDZz5A"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 525960
+from app.core.config import settings
+
+SECRET_KEY = settings.secret_key
+ALGORITHM = settings.algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
