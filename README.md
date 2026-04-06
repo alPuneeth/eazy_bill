@@ -1,207 +1,139 @@
-**EazyBill** — Local Development Setup (README)
+# EazyBill
 
-This document explains how to set up and run EazyBill locally on a new device from scratch.
-Follow the steps in order. Do not skip steps.
+A production-grade REST API backend for a cable operator's billing and customer management system. Handles customer onboarding, billing, agent operations, collections, and reporting. Designed and implemented end-to-end using FastAPI, SQLModel, and PostgreSQL.
 
---------------------------------------------------
-STEP 1 — INSTALL SYSTEM PREREQUISITES
---------------------------------------------------
+---
 
-Install the following software:
+## Tech Stack
 
-- Python 3.10 or higher
+- **Framework:** FastAPI
+- **ORM:** SQLModel + SQLAlchemy
+- **Database:** PostgreSQL
+- **Migrations:** Alembic
+- **Auth:** JWT (python-jose) + RBAC
+- **Language:** Python 3.10+
+
+---
+
+## Architecture
+```
+app/
+├── api/          # Route layer (entry points)
+├── auth/         # JWT token handling
+├── core/         # Config, exceptions, security
+├── db/           # Session management and DB initialization
+├── dependencies/ # Auth and RBAC enforcement (FastAPI Depends)
+├── models/       # SQLModel ORM models
+├── schemas/      # Request/response validation (Pydantic)
+├── services/     # Business logic layer(customer, billing, reports, devices)
+└── main.py       # Application entry point
+```
+
+### Request Lifecycle
+```
+Request → Router → Service → Database
+               ↑
+          Auth + RBAC (Depends)
+```
+
+- Routers handle request/response
+- Services encapsulate business logic
+- Dependencies enforce authentication and authorization
+- Models and Schemas separate persistence from validation
+
+---
+
+## Features
+
+- Customer onboarding (single and bulk)
+- Bill generation with validation rules
+- Same-day bill edit restriction
+- Package-based pricing model
+- Agent-based access restriction
+- Role-based access control (admin / agent)
+- Village-level data isolation
+- Reports:
+     - Billing summaries
+     - Collection reports
+     - Customer status insights
+- UUID-based external identifiers (secure public APIs)
+
+---
+
+## Local Setup
+
+### Prerequisites
+
+- Python 3.10+
+- PostgreSQL 13+
 - Git
-- PostgreSQL 13 or higher
 
-1.1 Install Python
-Download from: https://www.python.org/downloads/
-
-During installation:
-- Enable “Add Python to PATH”
-- Use default options
-
-Verify:
-python --version
-
-1.2 Install Git
-Download from: https://git-scm.com/downloads/
-
-Verify:
-git --version
-
-1.3 Install PostgreSQL
-Download from: https://www.postgresql.org/download/
-
-During installation:
-- Set password for postgres user
-- Keep port 5432
-- Install pgAdmin (recommended)
-
-Verify:
-psql --version
-
---------------------------------------------------
-STEP 2 — CLONE THE REPOSITORY
---------------------------------------------------
-
+### Installation
+```bash
+# 1. Clone the repository
 git clone https://github.com/alPuneeth/eazy_bill.git
-
 cd eazy_bill
 
---------------------------------------------------
-STEP 3 — CREATE AND ACTIVATE VIRTUAL ENVIRONMENT
---------------------------------------------------
-
-Windows:
+# 2. Create and activate virtual environment
 python -m venv venv
-venv\Scripts\activate
+venv\Scripts\activate        # Windows
+source venv/bin/activate     # Linux / macOS
 
-Linux / macOS:
-python3 -m venv venv
-source venv/bin/activate
-
---------------------------------------------------
-STEP 4 — INSTALL PYTHON DEPENDENCIES
---------------------------------------------------
-
-pip install --upgrade pip
+# 3. Install dependencies
 pip install -r requirements.txt
 
---------------------------------------------------
-STEP 5 — CREATE POSTGRESQL DATABASE
---------------------------------------------------
-
+# 4. Database Setup 
+# Open PostgreSQL
 psql -U postgres
 
+# Create Database
 CREATE DATABASE eazybill;
 \q
 
---------------------------------------------------
-STEP 6 — CONFIGURE ENVIRONMENT VARIABLES
---------------------------------------------------
-
-Create a .env file in the project root:
-
+# 5.  Environment Configuration
+# Create a .env file in the project root:
 DATABASE_URL=postgresql+psycopg2://postgres:your_password@localhost:5432/eazybill
-
-SECRET_KEY=dev-password-change-this-later
-
+SECRET_KEY=your-secret-key
 ALGORITHM=HS256
-
-ACCESS_TOKEN_EXPIRE_MINUTES=30 or 60
-
+ACCESS_TOKEN_EXPIRE_MINUTES=60
 ENV=development
 
-
-Do NOT commit .env to Git.
-
---------------------------------------------------
-STEP 7 — VERIFY ALEMBIC CONFIGURATION
---------------------------------------------------
-
-Open alembic.ini and ensure:
-
-sqlalchemy.url = %(DATABASE_URL)s
-
---------------------------------------------------
-STEP 8 — RUN DATABASE MIGRATIONS
---------------------------------------------------
-
+# 6. Run migrations
 alembic upgrade head
 
-Verify tables:
-
-psql -U postgres -d eazybill
-
-\dt
-
---------------------------------------------------
-STEP 9 — START THE APPLICATION
---------------------------------------------------
-
+# 7. Start the server
 uvicorn app.main:app --reload
+```
 
-Server runs at:
-http://127.0.0.1:8000
+### API Documentation
 
---------------------------------------------------
-STEP 10 — API DOCUMENTATION
---------------------------------------------------
+- Swagger UI: http://127.0.0.1:8000/docs
+- ReDoc: http://127.0.0.1:8000/redoc
 
-Swagger UI:
-http://127.0.0.1:8000/docs
+---
 
-ReDoc:
-http://127.0.0.1:8000/redoc
+## Authentication & Authorization
 
---------------------------------------------------
-STEP 11 — AUTHENTICATION FLOW
---------------------------------------------------
+- JWT-based authentication
+- Role-based access control
+    - Admin -> full access
+    - Agent -> restricted to assigned data
+- RBAC enforced via FastAPI dependencies and service-layer checks
+- Single-admin constraint enforced at the application level
 
-1. Create admin/test user
-2. Login and obtain JWT token
-3. Authorize via Swagger
-4. Access protected endpoints
+---
 
-Authentication design note:
-This application uses long-lived JWT access tokens (1 year expiry).
-This is an explicit usability-driven decision for a private, single-user system.
-The risk surface is limited and acceptable for the deployment context.
+## Design Decisions
 
---------------------------------------------------
-STEP 12 — CREATE LOOKUP / MASTER DATA
---------------------------------------------------
+- UUIDs over incremental IDs → prevents enumeration attacks
+- Service layer abstraction → keeps routers thin and logic testable
+- Manual Alembic review → avoids unintended schema changes
+- Long-lived JWT tokens → acceptable due to controlled deployment environment
 
-Create required lookup data:
-- Status
-- Village
-- Customer Type
-- Package
-- Device / FTTH lookups
+---
 
---------------------------------------------------
-STEP 13 — ONBOARD CUSTOMER
---------------------------------------------------
+## Notes
 
-Create customer with village, package, and device info.
-
---------------------------------------------------
-STEP 14 — CREATE BILL
---------------------------------------------------
-
-- Monthly rate is sourced from Package.price
-- Bill amount is validated
-- Bill date is stored
-
---------------------------------------------------
-STEP 15 — UPDATE BILL (SAME-DAY RULE)
---------------------------------------------------
-
-Bills can only be updated on the day they are created.
-
---------------------------------------------------
-STEP 16 — VERIFY END-TO-END FLOW
---------------------------------------------------
-
-Confirm:
-- Customer listing works
-- Bill details are correct
-- Pricing matches package
-- Validations are enforced
-
---------------------------------------------------
-STEP 17 — STOP APPLICATION
---------------------------------------------------
-
-CTRL + C
-deactivate
-
---------------------------------------------------
-STEP 18 — CLEAN RESET (OPTIONAL)
---------------------------------------------------
-
-dropdb eazybill
-
-createdb eazybill
-
-alembic upgrade head
+- `.env`, `venv/` are excluded via `.gitignore`
+- PostgreSQL must be running before applying migrations
+- All schema changes must go through Alembic
