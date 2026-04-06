@@ -2,7 +2,7 @@ from sqlmodel import Session
 from sqlalchemy import select, func, and_
 
 from app.schemas.customers.customer_onboard import CustomerOnboardRead
-from app.schemas.common import IdValueRead, VillageSummary
+from app.schemas.common import IdValueRead, VillageSummary, CreatorSummary
 
 from app.models.core_models.customer import Customer
 from app.models.devices.device_info import DeviceInfo
@@ -110,7 +110,7 @@ def build_customer_onboard_list(session: Session, current_user:User) -> list[Cus
                                     if package_ else None
                                 ),
                                 created_by_id=(
-                                    IdValueRead(id=creator.id, value=creator.name)
+                                    CreatorSummary(id=creator.id, public_id=creator.public_id, name=creator.name)
                                     if creator else None
                                 ),
 

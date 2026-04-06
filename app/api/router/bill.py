@@ -16,7 +16,7 @@ from app.models.core_models.user import User
 from app.db.session import get_session
 from app.models.core_models.customer import Customer
 from app.models.lookup.package import Package
-from app.schemas.common import IdValueRead
+from app.schemas.common import IdValueRead, CreatorSummary
 from app.models.bill.bill import Bill
 from app.schemas.bill import (
     BillCreate,
@@ -50,7 +50,8 @@ def list_bills(
             Package.id.label("package_id"),
             Package.name.label("package_value"),
             User.id.label("created_by_id"),
-            User.name.label("created_by_value"),
+            User.public_id.label("created_by_public_id"),
+            User.name.label("created_by_name"),
             Bill.created_at,
             Bill.updated_at,
         )
@@ -85,9 +86,10 @@ def list_bills(
                 id=r["package_id"],
                 value=r["package_value"]
             ),
-            created_by_id=IdValueRead(
+            created_by_id=CreatorSummary(
                 id=r["created_by_id"],
-                value=r["created_by_value"]
+                public_id=r["created_by_public_id"],
+                name=r["created_by_name"]
             ),
             created_at=r["created_at"],
             updated_at=r["updated_at"],
@@ -167,9 +169,10 @@ def get_bill(
                         id=bill.package_id,
                         value=package.name
                     ),
-                    created_by_id=IdValueRead(
-                        id=current_user.id,
-                        value=current_user.name
+                    created_by_id=CreatorSummary(
+                        id=creator.id,
+                        public_id=creator.public_id,
+                        name=creator.name
                     ),
                     created_at=bill.created_at,
                     updated_at=bill.updated_at,
@@ -265,9 +268,10 @@ def create_bill(
             id=bill.package_id,
             value=package.name
         ),
-        created_by_id=IdValueRead(
+        created_by_id=CreatorSummary(
             id=current_user.id,
-            value=current_user.name
+            public_id=current_user.public_id,
+            name=current_user.name
         ),
         created_at=bill.created_at,
         updated_at=bill.updated_at,
@@ -367,9 +371,10 @@ def update_bill(
                         id=package.id,
                         value=package.name
                     ),
-                    created_by_id=IdValueRead(
+                    created_by_id=CreatorSummary(
                         id=creator.id,
-                        value=creator.name
+                        public_id=creator.public_id,
+                        name=creator.name
                     ),
                     created_at=bill.created_at,
                     updated_at=bill.updated_at,
@@ -422,7 +427,8 @@ def get_bills_by_customer(
             Package.name.label("package_value"),
 
             User.id.label("created_by_id"),
-            User.name.label("created_by_value"),
+            User.public_id.label("created_by_public_id"),
+            User.name.label("created_by_name"),
 
             Bill.created_at,
             Bill.updated_at,
@@ -450,9 +456,10 @@ def get_bills_by_customer(
                 id=r["package_id"],
                 value=r["package_value"]
             ),
-            created_by_id=IdValueRead(
+            created_by_id=CreatorSummary(
                 id=r["created_by_id"],
-                value=r["created_by_value"]
+                public_id=r["created_by_public_id"],
+                name=r["created_by_name"]
             ),
             created_at=r["created_at"],
             updated_at=r["updated_at"],

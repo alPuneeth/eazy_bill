@@ -3,7 +3,7 @@ from typing import Optional, Annotated
 from datetime import datetime
 from decimal import Decimal
 
-from app.schemas.common import IdValueRead
+from app.schemas.common import IdValueRead, CreatorSummary
 
 BillCodeStr = Annotated[
     str,
@@ -69,7 +69,7 @@ class BillRead(BaseModel):
     customer_public_id: str
 
     package_id: IdValueRead
-    created_by_id: IdValueRead
+    created_by_id: CreatorSummary
 
     created_at: datetime
     updated_at: datetime

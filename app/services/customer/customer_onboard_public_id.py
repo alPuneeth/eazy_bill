@@ -10,7 +10,7 @@ from app.services.customer.enforce_customer_vis import enforce_customer_visibili
 from app.schemas.customers.customer_onboard import (
     CustomerOnboardRead, CustomerOnboardUpdate
     )
-from app.schemas.common import IdValueRead, VillageSummary
+from app.schemas.common import IdValueRead, VillageSummary, CreatorSummary
 
 from app.models.core_models.customer import Customer
 from app.models.devices.device_info import DeviceInfo
@@ -102,9 +102,10 @@ def build_customer_onboard_read(customer_public_id: str, session: Session, curre
                 id=bill_package.id,
                 value=bill_package.name
             ),
-            created_by_id=IdValueRead(
+            created_by_id=CreatorSummary(
                 id=creator.id,
-                value=creator.name
+                public_id=creator.public_id,
+                name=creator.name
             ),
 
             created_at=bill.created_at,

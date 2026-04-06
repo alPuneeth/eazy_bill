@@ -10,3 +10,9 @@ class VillageSummary(BaseModel):
     id: int
     name: str
     village_code: str
+
+
+class CreatorSummary(BaseModel):
+    id: int
+    public_id: str
+    name: str
