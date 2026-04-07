@@ -46,7 +46,8 @@ class DeviceInfo(TimestampMixin, SQLModel, table=True):
         ...,
         index=True,
         nullable=False,
-        foreign_key="customer.id"
+        foreign_key="customer.id",
+        unique=True
         )
 
     account_number: Optional[str] = Field(

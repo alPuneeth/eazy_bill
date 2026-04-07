@@ -1,6 +1,5 @@
 # used in (ACTIVE + INACTIVE) and ARCHIVED customers
 from sqlmodel import select
-from sqlalchemy import and_
 from sqlalchemy import func
 
 from app.models.core_models.customer import Customer
@@ -19,7 +18,7 @@ def build_customer_list_query(
     latest_bill_subq = (
         select(
             Bill.customer_id,
-            func.max(Bill.bill_date).label("latest_bill_date")
+            func.max(Bill.id).label("max_bill_id") 
         )
         .group_by(Bill.customer_id)
         .subquery()
@@ -49,10 +48,7 @@ def build_customer_list_query(
         )
         .outerjoin(
             Bill,
-            and_(
-                Bill.customer_id == latest_bill_subq.c.customer_id,
-                Bill.bill_date == latest_bill_subq.c.latest_bill_date,
-            ),
+            Bill.id == latest_bill_subq.c.max_bill_id
         )
 
         # device status filter

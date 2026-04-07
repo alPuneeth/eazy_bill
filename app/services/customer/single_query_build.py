@@ -1,5 +1,5 @@
 from sqlmodel import Session
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func
 
 from app.schemas.customers.customer_onboard import CustomerOnboardRead
 from app.schemas.common import IdValueRead, VillageSummary, CreatorSummary
@@ -31,7 +31,7 @@ def build_customer_onboard_list(session: Session, current_user:User) -> list[Cus
     latest_bill_sq = (
         select(
             Bill.customer_id,
-            func.max(Bill.bill_date).label("max_bill_date")
+            func.max(Bill.id).label("max_bill_id")
     )
     .group_by(Bill.customer_id)
     .subquery()
@@ -63,10 +63,7 @@ def build_customer_onboard_list(session: Session, current_user:User) -> list[Cus
                    )
         .outerjoin(
                 Bill,
-                and_(
-                       Bill.customer_id == Customer.id,
-                       Bill.bill_date == latest_bill_sq.c.max_bill_date
-                   )
+                Bill.id == latest_bill_sq.c.max_bill_id 
                    )
         .outerjoin(User, User.id == Bill.created_by_id)
         .order_by(Customer.created_at.desc())
