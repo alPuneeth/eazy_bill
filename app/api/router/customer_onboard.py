@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session, select as orm_select
 from sqlalchemy.exc import IntegrityError
+from sqlmodel import Session
 
 from app.db.session import get_session
 from app.services.customer.single_query_build import build_customer_onboard_list
-from app.services.customer.enforce_customer_vis import enforce_customer_visibility
 from app.services.customer_onboard import onboard_single_customer
 from app.schemas.customers.bulk_onboard import (
     CustomerOnboardBulkCreate,
     CustomerOnboardRead,
     CustomerOnboardBulkRead
     )
+from app.services.customer.get_cus_by_public_id import get_customer_by_public_id
 from app.services.customer.customer_onboard_public_id import (
     build_customer_onboard_read,
     patch_customer_onboard
@@ -19,11 +19,9 @@ from app.models.core_models.customer import Customer
 from app.models.core_models.user import User
 from app.services.customer.customer_list import build_customer_list_query
 from app.dependencies.rbac import get_current_user
-from app.dependencies.rbac import require_admin
 
 from app.schemas.customers.customer_onboard import (
     CustomerOnboardCreate,
-    CustomerOnboardRead,
     CustomerOnboardUpdate,
     CustomerListRead                       
 
@@ -87,14 +85,14 @@ def get_customer(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
-    customer = session.exec(
-        orm_select(Customer).where(Customer.public_id == customer_public_id)
-    ).first()
-
-    if not customer:
-        raise HTTPException(status_code=404, detail="Customer not found")
-
-    # enforce_customer_visibility(customer, current_user, session)
+    try:
+        customer = get_customer_by_public_id(session, customer_public_id)
+    
+    except ValueError as e:
+        raise HTTPException(
+            status_code=404,
+            detail=str(e)
+        )
 
     return build_customer_onboard_read(customer_public_id, session, current_user)
 
@@ -165,7 +163,7 @@ def create_customers_bulk(
                 build_customer_onboard_read(customer.public_id, session, current_user)
             )
 
-        except Exception as e:
+        except (ValueError, PermissionError, IntegrityError) as e:
             session.rollback()
             failed.append({
                 "index": index,
@@ -188,20 +186,10 @@ def update_customer(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
-
-    customer = session.exec(orm_select(Customer)
-                            .where(
-                                Customer.public_id == customer_public_id
-                                )
-                            ).first()
-
-    if not customer:
-        raise HTTPException(status_code=404, detail="Customer not found")
-
-    # enforce_customer_visibility(customer, current_user, session)
-
     try:
-        patch_customer_onboard(customer_public_id, payload, session, current_user)
+        customer = patch_customer_onboard(customer_public_id, payload, session, current_user)
+        session.commit()
+        session.refresh(customer)
 
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -209,4 +197,4 @@ def update_customer(
         session.rollback()
         raise HTTPException(status_code=409, detail="Constraint violation")
 
-    return build_customer_onboard_read(customer_public_id, session, current_user)
+    return build_customer_onboard_read(customer.public_id, session, current_user)

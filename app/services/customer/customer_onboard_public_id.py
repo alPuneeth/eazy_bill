@@ -23,6 +23,7 @@ from app.models.lookup.package import Package
 from app.models.bill.bill import Bill
 from app.schemas.bill import BillRead
 from app.models.core_models.user import User 
+from app.services.customer.get_cus_by_public_id import get_customer_by_public_id
 
 
 def build_customer_onboard_read(customer_public_id: str, session: Session, current_user: User):
@@ -56,7 +57,7 @@ def build_customer_onboard_read(customer_public_id: str, session: Session, curre
         .where(Customer.public_id == customer_public_id)
     )
 
-    row = session.execute(stmt).first()
+    row = session.exec(stmt).first()
 
     if not row:
         raise HTTPException(status_code=404, detail="Customer not found")
@@ -154,19 +155,14 @@ def patch_customer_onboard(
     current_user: User
 ):
     # Fetch customer
-    customer = session.execute(
-        select(Customer).where((Customer.public_id == customer_public_id))
-    ).scalars().first()
-
-    if not customer:
-        raise ValueError("Customer not found")
-    
+    customer = get_customer_by_public_id(session, customer_public_id)
+   
     enforce_customer_visibility(customer, current_user, session)
 
     # Fetch device (single active device assumption)
-    device = session.execute(
+    device = session.exec(
         select(DeviceInfo).where(DeviceInfo.customer_id == customer.id)
-    ).scalars().first()
+    ).first()
 
     if not device:
         raise ValueError("Device not found")
@@ -176,7 +172,7 @@ def patch_customer_onboard(
     if "tvtype_id" in data and data["tvtype_id"] is not None:
         tvtype = session.get(TVType, data["tvtype_id"])
         if not tvtype:
-            raise HTTPException(400, "Invalid TV type")
+            raise ValueError("Invalid TV type")
 
     # ---- Split payload ----
     customer_fields = {
@@ -204,7 +200,4 @@ def patch_customer_onboard(
     for k, v in device_fields.items():
         setattr(device, k, v)
 
-    session.commit()
-    session.refresh(customer)
-
-    return customer.public_id
+    return customer
