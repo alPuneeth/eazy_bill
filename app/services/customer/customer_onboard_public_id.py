@@ -1,6 +1,3 @@
-# TODO (security): enforce customer visibility in GET/PATCH/POST
-# once feature development stabilizes
-
 # single payload - response model for a customer
 from sqlmodel import Session
 from fastapi import HTTPException
@@ -162,7 +159,7 @@ def patch_customer_onboard(
     # Fetch device (single active device assumption)
     device = session.exec(
         select(DeviceInfo).where(DeviceInfo.customer_id == customer.id)
-    ).first()
+    ).scalars().first()
 
     if not device:
         raise ValueError("Device not found")
