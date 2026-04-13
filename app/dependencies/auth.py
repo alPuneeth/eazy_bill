@@ -15,6 +15,13 @@ def get_current_user(
         credentials: HTTPAuthorizationCredentials = Depends(security),
         session: Session = Depends(get_session)
 ):
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
     token = credentials.credentials
 
     credentials_exception = HTTPException(
@@ -51,6 +58,9 @@ def get_current_user_optional(
 ) -> Optional[User]:
 
     try:
+        if credentials is None:
+            return None
+
         token = credentials.credentials
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_public_id = payload.get("sub")
