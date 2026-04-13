@@ -4,7 +4,6 @@ from sqlmodel import Session, select
 from app.dependencies.rbac import get_current_user
 from app.db.session import get_session
 
-from app.models.lookup.village import Village
 from app.models.core_models.user import User
 
 from app.schemas.bill import (
@@ -13,11 +12,13 @@ from app.schemas.bill import (
     BillUpdate
 )
 
-from app.services.bill_service import generate_bill_code
-from app.services.bill.bills_list import get_all_bills
+from app.services.exceptions import VillageAccessDeniedError
+from app.services.bill.bill_gen_code_vill import generate_bill_code_for_village
 from app.services.bill.bills_list import get_all_bills
 from app.services.bill.bill_exceptions import (
     BillNotFoundError,
+    OverlappinBillingPeriod,
+    VillageNotFoundError,
     CustomerNotFoundError,
     InvalidPackageError,
     BillConflictError,
@@ -75,17 +76,24 @@ def get_bill_code(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
                   ):
-    village = session.exec(
-        select(Village).where(Village.village_code == village_code)
-    ).first()
-
-    if not village:
+    try:
+        return generate_bill_code_for_village(
+            village_code=village_code,
+            session=session,
+            current_user=current_user
+        )
+    
+    except VillageNotFoundError:
         raise HTTPException(
             status_code=404,
             detail="Village not found"
         )
 
-    return generate_bill_code(village.id, session, current_user)
+    except VillageAccessDeniedError:
+        raise HTTPException(
+            status_code=403,
+            detail="Access to this village is restricted!"
+        )
 
 
 # bill
@@ -149,6 +157,12 @@ def create_bill(
         raise HTTPException(
             status_code=409,
             detail="Duplicate bill_code or invalid bill"
+        )
+    
+    except OverlappinBillingPeriod:
+        raise HTTPException(
+            status_code=409,
+            detail="Billing period conflict: Please select a non-overlapping timeframe."
         )
 
     except PermissionError:
