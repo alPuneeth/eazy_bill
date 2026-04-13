@@ -4,9 +4,12 @@ from sqlalchemy import func, case
 
 from app.models.bill.bill import Bill
 from app.schemas.reports.collections import CollectionsSummaryRead
+from app.models.core_models.user import User, UserRole
+from app.models.lookup.village import Village
+from app.models.core_models.customer import Customer
 
 
-def get_collections_summary(session: Session) -> CollectionsSummaryRead:
+def get_collections_summary(session: Session, current_user: User) -> CollectionsSummaryRead:
     today = date.today()
 
     stmt = select(
@@ -25,7 +28,7 @@ def get_collections_summary(session: Session) -> CollectionsSummaryRead:
                 case(
                     (
                         func.date_trunc("month", Bill.bill_date)
-                        == func.date_trunc("month", today),
+                        == func.date_trunc("month", func.current_date()),
                         Bill.bill_amount
                     ),
                     else_=0
@@ -33,7 +36,13 @@ def get_collections_summary(session: Session) -> CollectionsSummaryRead:
             ),
             0
         ).label("monthly_collection"),
-    )
+    ).join(
+        Customer, Bill.customer_id == Customer.id
+        ).join(Village, Village.id == Customer.village_id
+               )
+
+    if current_user.role == UserRole.AGENT:
+        stmt = stmt.where(Village.agent_id == current_user.id)
 
     result = session.exec(stmt).one()
 

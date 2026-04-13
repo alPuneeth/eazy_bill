@@ -7,7 +7,7 @@ from app.schemas.bill import BillRead
 from app.models.core_models.user import User
 from app.models.lookup.village import Village
 from app.models.bill.bill import Bill
-from app.schemas.common import IdValueRead
+from app.schemas.common import IdValueRead, CreatorSummary
 
 
 def get_customer_bills_all_time(
@@ -64,9 +64,10 @@ def get_customer_bills_all_time(
             value=bill.package.name
         ),
 
-        created_by_id=IdValueRead(
-            id=bill.created_by.id,
-            value=bill.created_by.name
+        created_by_id=CreatorSummary(
+            id=bill.created_by_id,
+            public_id=bill.public_id,
+            name=bill.created_by.name
         ),
 
         created_at=bill.created_at,
