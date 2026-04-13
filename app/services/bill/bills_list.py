@@ -42,7 +42,7 @@ def get_all_bills(session: Session, current_user: User) -> list[BillRead]:
         .join(Village, Village.id == Customer.village_id)
         .join(Package, Package.id == Bill.package_id)
         .join(User, User.id == Bill.created_by_id)
-        .order_by(desc(Bill.bill_date))
+        .order_by(desc(Bill.bill_date), desc(Bill.id))
     )
 
     # 🔐Apply RBAC filter

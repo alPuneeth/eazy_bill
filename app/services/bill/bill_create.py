@@ -11,6 +11,7 @@ from app.schemas.common import IdValueRead, CreatorSummary
 
 from app.services.bill.bill_exceptions import (
     BillConflictError,
+    OverlappinBillingPeriod,
     CustomerNotFoundError,
     InvalidPackageError
 )
@@ -52,6 +53,18 @@ def create_bll(
     package = session.get(Package, payload.package_id)
     if not package:
         raise InvalidPackageError()
+
+    # Prevents overlapping billing periods to ensure consistent subscription timelines
+    existing_overlap = session.exec(
+    select(Bill).where(
+        Bill.customer_id == customer.id,
+        Bill.start_date < payload.end_date,
+        Bill.end_date > payload.start_date
+    )
+    ).first()
+
+    if existing_overlap:
+        raise OverlappinBillingPeriod()
 
     # 3. Create bill
     bill = Bill(

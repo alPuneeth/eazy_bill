@@ -12,9 +12,9 @@ def apply_bill_visibility(stmt, current_user: User):
     FULL_ACCESS_ROLES = {UserRole.ADMIN, UserRole.TEST_USER}
 
     if current_user.role == UserRole.AGENT:
-        stmt = stmt.where(Village.agent_id == current_user.id)
+        return stmt.where(Village.agent_id == current_user.id)
     
     if current_user.role in FULL_ACCESS_ROLES:
         return stmt
     
-    raise PermissionError("Unauthorized role")
+    raise PermissionError("Access denied")

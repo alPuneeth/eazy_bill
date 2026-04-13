@@ -28,3 +28,11 @@ class BillUpdateNotAllowedError(BillError):
 
 class EmptyUpdateError(BillError):
     pass
+
+
+class OverlappinBillingPeriod(BillError):
+    pass
+
+
+class VillageNotFoundError(BillError):
+    pass
