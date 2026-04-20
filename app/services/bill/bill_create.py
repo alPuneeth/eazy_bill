@@ -65,6 +65,7 @@ def create_bll(
 
     if existing_overlap:
         raise OverlappinBillingPeriod()
+    
 
     # 3. Create bill
     bill = Bill(

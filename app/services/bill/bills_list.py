@@ -14,12 +14,7 @@ from app.services.bill.bill_visibility import apply_bill_visibility
 from app.services.bill.bill_mapper import map_bill_row
 
 
-def get_all_bills(session: Session, current_user: User) -> list[BillRead]:
-    """
-    - Single optimized JOIN query
-    - DB-level RBAC enforcement
-    - Lightweight mapping using .mappings()
-    """
+def build_bill_list_query(current_user: User):
     stmt = (
         select(
             Bill.public_id,
@@ -48,9 +43,7 @@ def get_all_bills(session: Session, current_user: User) -> list[BillRead]:
     # 🔐Apply RBAC filter
     stmt = apply_bill_visibility(stmt, current_user)
 
-    rows = session.exec(stmt).mappings().all()
-
-    return [map_bill_row(r) for r in rows]
+    return stmt
 
     
 

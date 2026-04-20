@@ -1,5 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select
+import logging
+logger = logging.getLogger(__name__)
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlmodel import Session
 
 from app.dependencies.rbac import get_current_user
 from app.db.session import get_session
@@ -12,9 +15,11 @@ from app.schemas.bill import (
     BillUpdate
 )
 
+from app.schemas.pagination.pag_response import PaginatedResponse
 from app.services.exceptions import VillageAccessDeniedError
 from app.services.bill.bill_gen_code_vill import generate_bill_code_for_village
-from app.services.bill.bills_list import get_all_bills
+from app.services.bill.bills_list import build_bill_list_query
+from app.services.bill.bill_mapper import map_bill_row
 from app.services.bill.bill_exceptions import (
     BillNotFoundError,
     OverlappinBillingPeriod,
@@ -28,7 +33,8 @@ from app.services.bill.bill_exceptions import (
 from app.services.bill.bill_by_public_id import get_bill_by_public_id
 from app.services.bill.bill_create import create_bll
 from app.services.bill.bill_update import update_bll
-from app.services.bill.bill_by_customer import get_blls_by_customer
+from app.services.bill.bill_by_customer import build_bills_by_customer_query
+from app.services.pagination.paginate_func import paginate
 
 
 router = APIRouter(
@@ -38,25 +44,41 @@ router = APIRouter(
 
 
 # all bills
-@router.get("/", response_model=list[BillRead])
+@router.get("/", response_model=PaginatedResponse[BillRead])
 def list_bills(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Thin router responsibilities:
-    - Dependency injection
-    - Exception translation
-    - No business logic
-    """
     try:
-        return get_all_bills(
-            session=session,
-            current_user=current_user
-            )
+        stmt = build_bill_list_query(current_user=current_user)
+
+        total, items = paginate(stmt, session, page, page_size, map_bill_row)
+
+        logger.info(
+        "Paginated bill list",
+        extra={
+            "page": page,
+            "page_size": page_size,
+            "user_id": current_user.id
+        }
+    )
+
+        return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "items": items
+    }
 
     except PermissionError:
         # Translate domain/system error → HTTP
+        logger.warning(
+                        "Unauthorized access attempt",
+                        extra={"user_id": current_user.id}
+                    )
+
         raise HTTPException(
             status_code=403,
             detail="You do not have permission to access bills"
@@ -64,6 +86,14 @@ def list_bills(
     
     except Exception:
         # Optional: fallback safeguard (log in real apps)
+        logger.exception(
+            "Failed to list bills",
+            extra={
+                    "user_id": current_user.id,
+                    "page": page,
+                    "page_size": page_size
+                    }
+        )
         raise HTTPException(
             status_code=500,
             detail="Internal server error"
@@ -236,24 +266,46 @@ def update_bill(
 # bill by customer public id
 @router.get(
     "/customer/{customer_public_id}",
-    response_model=list[BillRead]
+    response_model=PaginatedResponse[BillRead]
 )
 def get_bills_by_customer(
     customer_public_id: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Thin router:
-    - Delegates to service
-    - Handles only HTTP concerns
-    """
     try:
-        return get_blls_by_customer(
+        stmt = build_bills_by_customer_query(
             customer_public_id=customer_public_id,
             session=session,
             current_user=current_user
         )
+
+        total, items = paginate(
+            stmt,
+            session,
+            page,
+            page_size,
+            map_bill_row
+        )
+
+        logger.info(
+                    "Paginated bills for customer",
+                    extra={
+                        "page": page,
+                        "page_size": page_size,
+                        "user_id": current_user.id
+                    }
+                )
+
+        return {
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "items": items
+        }
+
 
     except CustomerNotFoundError:
         raise HTTPException(
@@ -262,6 +314,13 @@ def get_bills_by_customer(
         )
 
     except PermissionError:
+        logger.warning(
+        "Unauthorized access attempt",
+        extra={
+            "user_id": current_user.id,
+            "customer_public_id": customer_public_id
+        }
+        )
         raise HTTPException(
             status_code=403,
             detail="Access denied"
@@ -269,6 +328,12 @@ def get_bills_by_customer(
 
     except Exception:
         # Optional safety fallback (log in real apps)
+        logger.exception("Failed to fetch bills by customer",
+        extra={
+                "customer_public_id": customer_public_id,
+                "user_id": current_user.id
+    })
+
         raise HTTPException(
             status_code=500,
             detail="Internal server error"

@@ -1,10 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+import logging
+logger = logging.getLogger(__name__)
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 
 from app.db.session import get_session
+from app.schemas.pagination.pag_response import PaginatedResponse
 from app.services.customer.single_query_build import build_customer_onboard_list
 from app.services.customer_onboard import onboard_single_customer
+from app.services.pagination.paginate_func import paginate
 from app.schemas.customers.bulk_onboard import (
     CustomerOnboardBulkCreate,
     CustomerOnboardRead,
@@ -48,34 +53,102 @@ def list_all_customers(
 
 
 # ACTIVE + INACTIVE - card view
-@router.get("/", response_model=list[CustomerListRead],
+@router.get("/",
+            response_model=PaginatedResponse[CustomerListRead],
             summary="List active and inactive customers")
 def list_customers(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
-    stmt = build_customer_list_query(
-        device_statuses=["active", "inactive"],
-        current_user=current_user
+    try:
+        # base query
+        stmt = build_customer_list_query(
+            device_statuses=["active", "inactive"],
+            current_user=current_user
+        )
+
+        total, items = paginate(stmt, session, page, page_size, CustomerListRead)
+
+        logger.info(
+            "Customer list paginated",
+            extra={
+                "user_id": current_user.id,
+                "page": page,
+                "page_size": page_size
+            }
+            )
+
+        # response
+        return {
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "items": items
+        }
+    
+    except Exception:
+        logger.exception(
+        "Failed to list customers",
+        extra={
+            "user_id": current_user.id,
+            "page": page,
+            "page_size": page_size
+        }
     )
-    return session.exec(stmt).mappings().all()
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error"
+        )
 
 
 # ARCHIVED - card view
 @router.get(
     "/archived",
-    response_model=list[CustomerListRead],
+    response_model=PaginatedResponse[CustomerListRead],
     summary="List archived customers"
 )
 def list_archived_customers(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
-    stmt = build_customer_list_query(
-        device_statuses=["archived"],
-        current_user=current_user
+    try: 
+        stmt = build_customer_list_query(
+            device_statuses=["archived"],
+            current_user=current_user
+        )
+
+        total, items = paginate(stmt, session, page, page_size, CustomerListRead)
+
+        logger.info(
+        "Archived customers paginated",
+        extra={
+            "user_id": current_user.id,
+            "page": page,
+            "page_size": page_size
+        }
+        )
+        
+        return {
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "items": items
+        }
+    
+    except Exception:
+        logger.exception(
+        "Failed to list archived customers",
+        extra={
+            "user_id": current_user.id,
+            "page": page,
+            "page_size": page_size
+        }
     )
-    return session.exec(stmt).mappings().all()
+        raise HTTPException(500, "Internal server error")
 
 
 # GET ONE -single payload
@@ -94,11 +167,11 @@ def get_customer(
             detail=str(e)
         )
 
-    return build_customer_onboard_read(customer_public_id, session, current_user)
+    return build_customer_onboard_read(customer.public_id, session, current_user)
 
 
 # POST - single payload
-@router.post("/create", response_model=CustomerOnboardRead)
+@router.post("/", response_model=CustomerOnboardRead)
 def create_customer(
     payload: CustomerOnboardCreate,
     session: Session = Depends(get_session),
@@ -137,7 +210,7 @@ def create_customer(
     return build_customer_onboard_read(customer.public_id, session, current_user)
 
 
-@router.post("/create/bulk",
+@router.post("/bulk",
              response_model=CustomerOnboardBulkRead
              )
 def create_customers_bulk(
@@ -192,7 +265,9 @@ def update_customer(
         session.refresh(customer)
 
     except ValueError as e:
+        session.rollback()
         raise HTTPException(status_code=404, detail=str(e))
+
     except IntegrityError:
         session.rollback()
         raise HTTPException(status_code=409, detail="Constraint violation")

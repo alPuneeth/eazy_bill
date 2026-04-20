@@ -8,13 +8,12 @@ from app.models.core_models.user import User
 
 from app.services.bill.bill_exceptions import CustomerNotFoundError
 from app.services.customer.enforce_customer_vis import enforce_customer_visibility
-from app.services.bill.bill_mapper import map_bill_row
 
 
-def get_blls_by_customer(
+def build_bills_by_customer_query(
     customer_public_id: str,
-    session: Session,
-    current_user: User
+    current_user: User,
+    session: Session
 ):
     # 1. Resolve customer
     customer = session.exec(
@@ -59,12 +58,7 @@ def get_blls_by_customer(
         .join(Package, Package.id == Bill.package_id)
         .join(User, User.id == Bill.created_by_id)
         .where(Customer.id == customer.id)
-        .order_by(desc(Bill.bill_date))
+        .order_by(desc(Bill.bill_date), desc(Bill.id))
     )
 
-    rows = session.exec(stmt).mappings().all()
-
-    return [
-        map_bill_row(r)
-        for r in rows
-    ]
+    return stmt
