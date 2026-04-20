@@ -10,8 +10,5 @@ engine = create_engine(
 
 
 def get_session():
-    session = Session(engine)
-    try:
+    with Session(engine) as session:
         yield session
-    finally:
-        session.close()

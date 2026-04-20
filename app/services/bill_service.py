@@ -21,8 +21,11 @@ def generate_bill_code(village: Village, session: Session, current_user: User):
     Domain exceptions - for data not found
 
     """
-    current_year = datetime.now().year
+    current_year = datetime.now().year   
     current_year_short = current_year % 100
+
+    start = datetime(current_year, 1, 1)  # 2026-01-01 00:00:00
+    end = datetime(current_year + 1, 1, 1) # 2027-01-01 00:00:00
 
     # Fetch latest bill for this village in current year
     latest_bill = session.exec(
@@ -30,7 +33,9 @@ def generate_bill_code(village: Village, session: Session, current_user: User):
         .join(Customer, Bill.customer_id == Customer.id)
         .where(
             Customer.village_id == village.id,
-            func.extract("year", Bill.bill_date) == current_year
+            # func.extract("year", Bill.bill_date) == current_year
+            Bill.bill_date >= start,
+            Bill.bill_date < end
         )
         .order_by(Bill.bill_date.desc(), Bill.id.desc())
         .limit(1)

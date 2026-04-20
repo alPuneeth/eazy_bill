@@ -44,7 +44,6 @@ class DeviceInfo(TimestampMixin, SQLModel, table=True):
     # FK → Customer (frequently filtered)
     customer_id: int = Field(
         ...,
-        index=True,
         nullable=False,
         foreign_key="customer.id",
         unique=True
@@ -52,7 +51,6 @@ class DeviceInfo(TimestampMixin, SQLModel, table=True):
 
     account_number: Optional[str] = Field(
         default=None,
-        index=True,
         unique=True,
         nullable=True,
         max_length=100
@@ -66,7 +64,6 @@ class DeviceInfo(TimestampMixin, SQLModel, table=True):
 
     vc_number: str = Field(
         ...,
-        index=True,
         nullable=False,
         unique=True,
         max_length=100

@@ -39,6 +39,12 @@ def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"
         )
+    
+    if not user.is_active:
+        raise HTTPException(
+            status_code=403,
+            detail="Inactive user"
+        )
 
     # 3. Update last login (only on SUCCESS)
     user.last_login_at = datetime.now(timezone.utc)

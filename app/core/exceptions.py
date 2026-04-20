@@ -1,8 +1,10 @@
+import logging
+
+from starlette import status
+
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from starlette import status
-import logging
 from fastapi import HTTPException
 
 logger = logging.getLogger(__name__)
@@ -12,17 +14,19 @@ async def validation_exception_handler(
     request: Request,
     exc: RequestValidationError
 ):
-    # 🔴 FULL visibility for YOU
-    logger.error("Validation error")
-    logger.error("Errors: %s", exc.errors())
-    logger.error("Body: %s", exc.body)
+    # FULL visibility for YOU
+    logger.error("Validation error on %s %s - Errors: %s - Body: %s",
+                request.method,
+                request.url.path,
+                exc.errors(),
+                exc.body
+                )
 
-    # Extract first meaningful error message
-    message = exc.errors()[0].get("msg", "Invalid request")
+    messages = [error.get("msg", "Invalid request") for error in exc.errors()]
 
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"message": message}
+        content={"messages": messages}
     )
 
 

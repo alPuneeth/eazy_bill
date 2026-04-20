@@ -1,38 +1,78 @@
-from fastapi import FastAPI, HTTPException
-from sqlalchemy import text
-from fastapi.exceptions import RequestValidationError
+
+# -------------------- LOGGING --------------------
+
+from contextlib import asynccontextmanager
 import logging
 
-from app.core.exceptions import (
-    validation_exception_handler,
-    http_exception_handler
-    )
-from app.core.config import settings
-from app.db.session import engine
-from app.api.api_router import api_router
-
-
-app = FastAPI(debug=settings.debug)  # title=settings.app_name | debug=settings.debug
-
-app.include_router(api_router)
-
-app.add_exception_handler(
-    RequestValidationError,
-    validation_exception_handler
-)
-
-app.add_exception_handler(
-    HTTPException,
-    http_exception_handler
-)
+from fastapi.responses import JSONResponse
+from sqlmodel import Session
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)s | %(name)s | %(message)s"
 )
 
+logger = logging.getLogger(__name__)   
 
-# home_page
+
+# -------------------- IMPORTS --------------------
+
+from fastapi import Depends, FastAPI, HTTPException, Request
+from sqlmodel import select
+from fastapi.exceptions import RequestValidationError
+
+from app.core.exceptions import (
+    validation_exception_handler,
+    http_exception_handler
+    )
+from app.core.config import settings
+from app.db.session import get_session
+from app.api.api_router import api_router
+
+
+# -------------------- LIFESPAN (REPLACES on_event) --------------------
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Application started")
+    yield
+    logger.info("Application shutdown")
+
+
+# -------------------- APP INIT --------------------
+
+app = FastAPI(
+    title=settings.app_name,
+    debug=settings.debug,
+    version="1.0.0",
+    lifespan=lifespan
+    ) 
+
+app.include_router(api_router)
+
+
+# -------------------- EXCEPTION HANDLERS --------------------
+app.add_exception_handler(
+    RequestValidationError,
+    validation_exception_handler  # type: ignore
+)
+
+app.add_exception_handler(
+    HTTPException,
+    http_exception_handler   # type: ignore
+)
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.exception(f"{request.method} {request.url} failed")
+
+    return JSONResponse(
+        status_code=500,
+        content={"error": "Internal Server Error"}
+    )
+
+# -------------------- ROOT --------------------
+
 @app.get("/")
 def home():
     return {
@@ -42,17 +82,21 @@ def home():
         }
 
 
-# DB connection check
-@app.get("/db_check")
-def db_check():
-    try:
-        with engine.connect() as conn:
-            conn.execute(text("SELECT 1"))
-        return {"database": "connected"}
-    except Exception as e:
-        return {"database": "error", "detail": str(e)}
-    
+# -------------------- DB CHECK --------------------
 
-# @app.get("/ping")
-# def ping():
-#     return {"msg": "pong"}
+@app.get("/db_check")
+def db_check(db: Session = Depends(get_session)):
+    try:
+        db.exec(select(1))
+
+        logger.info("DB connection successful")
+        return {"database": "connected"}
+
+    except Exception:
+        logger.exception("DB connection failed")
+
+        raise HTTPException(
+            status_code=500,
+            detail="Database connection failed"
+        )
+    

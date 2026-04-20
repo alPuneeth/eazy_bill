@@ -5,7 +5,7 @@ from decimal import Decimal
 
 # third-party
 from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import Column, Numeric
+from sqlalchemy import Column, Numeric, Index
 
 # local module
 from app.models.utilities import TimestampMixin, generate_uuid
@@ -51,13 +51,13 @@ class Bill(TimestampMixin, SQLModel, table=True):
         ...,
         nullable=False,
         max_length=100,
-        unique=True,
-        index=True
+        unique=True
         )
 
     bill_date: datetime = Field(
         ...,
-        nullable=False
+        nullable=False,
+        index=True
         )
 
     package_id: int = Field(
@@ -94,6 +94,10 @@ class Bill(TimestampMixin, SQLModel, table=True):
         foreign_key="user.id",
         index=True
     )
+    __table_args__ = (
+        Index("idx_bill_customer_latest", "customer_id", "id"),
+    )
+
     customer: Optional[Customer] = Relationship()
     package: Optional[Package] = Relationship()
     created_by: Optional[User] = Relationship()

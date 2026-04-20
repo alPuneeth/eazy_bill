@@ -21,7 +21,8 @@ from app.schemas.device_info import (
 
 router = APIRouter(
     prefix="/device_info",
-    tags=["DeviceInfo"]
+    tags=["DeviceInfo"],
+    dependencies=[Depends(get_current_user)]
     )
 
 

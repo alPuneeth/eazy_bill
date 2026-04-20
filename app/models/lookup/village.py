@@ -62,6 +62,7 @@ class Village(TimestampMixin, SQLModel, table=True):
     # ownership of village
     agent_id: Optional[int] = Field(
         foreign_key="user.id",
+        index=True,
         default=None,
         nullable=True,
         description="Village belongs to this agent"

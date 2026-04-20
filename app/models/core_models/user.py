@@ -88,7 +88,6 @@ class User(TimestampMixin, SQLModel, table=True):
         sa_column=Column(
             String(3),
             nullable=False,
-            index=True,
             unique=True
     ))
 
