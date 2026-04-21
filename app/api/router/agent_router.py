@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends
 from sqlmodel import Session
 
@@ -5,6 +6,8 @@ from app.dependencies.rbac import require_admin
 from app.db.session import get_session
 from app.schemas.village import VillageRead, AssignVillagesRequest, ReplaceVillagesRequest
 from app.services.agent_service import assign_villages_to_agent_service, replace_villages_to_agent_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/agent",
@@ -27,12 +30,29 @@ def assign_villages_to_agent(
     payload: AssignVillagesRequest,
     session: Session = Depends(get_session)
 ):
-    return assign_villages_to_agent_service(
+    logger.info(
+        f"Assign villages - start | agent_id={agent_public_id}"
+    )
+
+    try:
+        result = assign_villages_to_agent_service(
         session,
         agent_public_id,
         payload.village_ids,
         payload.force
     )
+
+        logger.info(
+            f"Assign villages - success | agent_id={agent_public_id}"
+        )
+
+        return result
+
+    except Exception:
+        logger.exception(
+            f"Assign villages - failed | agent_id={agent_public_id}"
+        )
+        raise
 
 
 @router.put("/{agent_public_id}/villages",
@@ -47,8 +67,23 @@ def replace_villages_for_agent(
     payload: ReplaceVillagesRequest,
     session: Session = Depends(get_session)
 ):
-    return replace_villages_to_agent_service(
+    logger.info(
+        f"Replace villages - start | agent_id={agent_public_id}"
+    )
+    try:
+        result = replace_villages_to_agent_service(
             session,
             agent_public_id,
             payload.village_ids
-    )
+        )
+        logger.info(
+             f"Replace villages - success | agent_id={agent_public_id} "
+        )
+        return result
+    
+    except Exception:
+        logger.exception(
+            f"Replace villages - failed | agent_id={agent_public_id}"
+        )
+        raise
+        

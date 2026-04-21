@@ -1,8 +1,8 @@
 
 # -------------------- LOGGING --------------------
 
-from contextlib import asynccontextmanager
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi.responses import JSONResponse
 from sqlmodel import Session
@@ -12,8 +12,7 @@ logging.basicConfig(
     format="%(levelname)s | %(name)s | %(message)s"
 )
 
-logger = logging.getLogger(__name__)   
-
+logger = logging.getLogger(__name__)
 
 # -------------------- IMPORTS --------------------
 
