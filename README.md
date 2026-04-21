@@ -88,20 +88,19 @@ psql -U postgres
 
 # Create Database
 CREATE DATABASE eazybill;
+CREATE DATABASE test_db;
 \q
 
 # 5.  Environment Configuration
 # Create a .env file in the project root:
-DATABASE_URL=postgresql+psycopg2://postgres:your_password@localhost:5432/eazybill
+DATABASE_URL=postgresql+psycopg://postgres:your_password@localhost:5432/eazybill
 SECRET_KEY=your-secret-key
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=60
-ENV=development
+TEST_DATABASE_URL=postgresql+psycopg://postgres:your_password@localhost:5432/test_db
 
 # 6. Run migrations
 alembic upgrade head
 
-# 7. Start the server
+# 7. Start the server (run from project root)
 uvicorn app.main:app --reload
 ```
 
