@@ -4,7 +4,7 @@ from sqlmodel import Session
 
 from app.dependencies.rbac import require_admin
 from app.db.session import get_session
-from app.schemas.village import VillageRead, AssignVillagesRequest, ReplaceVillagesRequest
+from app.schemas.village import AssignVillagesResponse, VillageRead, AssignVillagesRequest, ReplaceVillagesRequest
 from app.services.agent_service import assign_villages_to_agent_service, replace_villages_to_agent_service
 
 logger = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ router = APIRouter(
 
 
 @router.post("/{agent_public_id}/villages",
-             response_model=list[VillageRead],
+             response_model=AssignVillagesResponse,
              dependencies=[Depends(require_admin)],
              summary="Assign villages to an agent",
     description=(

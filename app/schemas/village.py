@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field, StringConstraints
 from typing import Optional, Annotated
 from datetime import datetime
 
+
 VillageNameStr = Annotated[
     str,
     StringConstraints(
@@ -77,3 +78,8 @@ class VillageUpdate(BaseModel):
     village_code: Optional[VillageCodeStr] = Field(
         default=None
         )
+
+
+class AssignVillagesResponse(BaseModel):
+    assigned: list[VillageRead]
+    already_assigned: list[int]

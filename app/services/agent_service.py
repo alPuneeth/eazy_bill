@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from app.models.core_models.user import User, UserRole
 from app.models.lookup.village import Village
-from app.schemas.village import VillageRead
+from app.schemas.village import AssignVillagesResponse, VillageRead
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +48,8 @@ def assign_villages_to_agent_service(
 
         if not villages:
             raise HTTPException(404, "No villages found")
+        
+        already_assigned_ids = []
 
         # 3. Assign correctly
         for v in villages:
@@ -55,6 +57,7 @@ def assign_villages_to_agent_service(
                 v.agent_id = agent.id
 
             elif v.agent_id == agent.id:
+                already_assigned_ids.append(v.id)
                 continue
 
             else:
@@ -87,8 +90,9 @@ def assign_villages_to_agent_service(
     ).all()
 
     # 6. Return mapped response
-    return [
-        VillageRead(
+    return AssignVillagesResponse(
+        assigned=[
+            VillageRead(
             id=v.id,
             name=v.name,
             postal_code=v.postal_code,
@@ -97,8 +101,11 @@ def assign_villages_to_agent_service(
             created_at=v.created_at,
             updated_at=v.updated_at
         )
-        for v in villages
-    ]
+        for v in villages if v.id not in already_assigned_ids
+        ],
+        already_assigned=already_assigned_ids
+        )
+    
 
 
 def replace_villages_to_agent_service(
