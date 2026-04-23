@@ -127,6 +127,21 @@ def replace_villages_to_agent_service(
 
         if agent.role != UserRole.AGENT:
             raise HTTPException(400, "User is not an agent")
+        
+        if not village_ids:
+            # remove all villages from agent
+            current_villages = session.exec(
+                select(Village).where(Village.agent_id == agent.id)
+            ).all()
+
+            for v in current_villages:
+                v.agent_id = None
+            
+            logger.info(f"Replace villages - clearing all | agent_id={agent_public_id}")
+            
+            session.commit()
+            return []
+
 
         # 2. Fetch villages (NO relationship load here)
         villages = session.exec(
@@ -143,9 +158,6 @@ def replace_villages_to_agent_service(
                 status_code=404,
                 detail=f"Villages not found: {list(missing_ids)}"
             )
-
-        if not villages:
-            raise HTTPException(404, "No villages found")
         
         # 3. fetch current assignments
         current_villages = session.exec(
@@ -156,21 +168,22 @@ def replace_villages_to_agent_service(
         new_ids = set(village_ids)
 
         # 4. compute diff
-        to_remove_ids = current_ids - new_ids   # villages to unassign
+        ids_to_remove = current_ids - new_ids   # villages to unassign
         to_add_ids = new_ids - current_ids      # villages to assign 
 
         logger.info(
-                f"Village replacement diff | remove={len(to_remove_ids)} | add={len(to_add_ids)}"
+                f"Village replacement diff | remove={len(ids_to_remove)} | add={len(to_add_ids)}"
             )
         
         # 5. unassing removed villages
         for v in current_villages:
-            if v.id in to_remove_ids:
+            if v.id in ids_to_remove:
                 v.agent_id = None
 
         # 6. Assign new villages
         for v in villages:
-            v.agent_id = agent.id
+            if v.agent_id != agent.id:
+                v.agent_id = agent.id
 
         session.commit()
 
