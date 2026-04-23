@@ -74,5 +74,5 @@ def login(
 
     except Exception:
         session.rollback()
-        logger.exception(f"Login - failed | phone={payload.phone}")
+        logger.exception(f"DB commit failed - login")
         raise

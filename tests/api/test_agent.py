@@ -80,7 +80,7 @@ def test_assign_villages_conflict(client, session):
     response = client.post(f"/agent/{agent2.public_id}/villages", json=payload)
 
     assert response.status_code == 400
-    assert "already assigned" in response.json()["message"].lower()
+    assert "already assigned" in response.json()["detail"].lower()
 
 
 def test_assign_villages_force(client, session):

@@ -26,7 +26,7 @@ async def validation_exception_handler(
 
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"messages": messages}
+        content={"detail": messages}
     )
 
 
@@ -35,7 +35,7 @@ async def http_exception_handler(
     exc: HTTPException
 ):
     logger.warning(
-                    "HTTP %s on %s %s: %s",
+                    "HTTP %s on %s %s: %s", 
                     exc.status_code,
                     request.method,
                     request.url.path,
@@ -44,5 +44,5 @@ async def http_exception_handler(
 
     return JSONResponse(
         status_code=exc.status_code,
-        content={"message": exc.detail}
+        content={"detail": exc.detail}
     )
