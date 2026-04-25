@@ -9,7 +9,7 @@ from app.schemas.auth import LoginRequest, TokenResponse
 from app.core.security import verify_password, create_access_token
 
 logger = logging.getLogger(__name__)
-
+ 
 router = APIRouter(
     prefix="/auth",
     tags=["Auth"]
@@ -24,7 +24,10 @@ def login(
     """
     Authenticate a user and issue an access token.
     """
-    logger.info(f"Login - start | phone={payload.phone}")
+    logger.info(
+        "Login - start | phone=%s",
+        payload.phone[-4:].rjust(len(payload.phone), "*")
+        )
 
     try:
         # 1. Fetch user by Username
@@ -32,32 +35,25 @@ def login(
             select(User).where(User.phone == payload.phone)
         ).first()
 
-        if not user:
+        if not user or not verify_password(payload.password, user.hashed_password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid credentials"
             )
 
-        # 2. Verify password
-        if not verify_password(payload.password, user.hashed_password):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid credentials"
-            )
-        
         if not user.is_active:
             raise HTTPException(
                 status_code=403,
                 detail="Inactive user"
             )
-
-        # 3. Update last login (only on SUCCESS)
+        
+        # 2. Update last login (only on SUCCESS)
         user.last_login_at = datetime.now(timezone.utc)
         session.add(user)   # optional but explicit
         session.commit()    # persist change
         session.refresh(user)  # ensures updated value is in memory
 
-        # 4. JWT
+        # 3. JWT
         access_token = create_access_token(
             data={"sub": user.public_id}
         )

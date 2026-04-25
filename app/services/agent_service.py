@@ -17,7 +17,38 @@ def assign_villages_to_agent_service(
     village_ids: list[int],
     force: bool = False
 ):
-    village_ids = list(set(village_ids))
+    """
+    Assign villages to a specific agent.
+
+    This performs an additive assignment. Existing assignments are preserved
+    unless overridden using the `force` flag.
+
+    Behavior:
+        - Unassigned villages are assigned to the agent.
+        - Villages already assigned to the same agent are skipped.
+        - Villages assigned to another agent:
+            * force=False → raises HTTP 400
+            * force=True  → reassigns ownership
+
+    The operation is atomic. If a conflict occurs with force=False,
+    no changes are committed.
+
+    Args:
+        session (Session): Database session.
+        agent_public_id (str): Public identifier of the agent.
+        village_ids (list[int]): List of village IDs to assign.
+        force (bool, optional): Override existing ownership. Defaults to False.
+
+    Returns:
+        AssignVillagesResponse: Contains assigned villages and already assigned IDs.
+
+    Raises:
+        HTTPException:
+            404: Agent or villages not found.
+            400: Conflict when force=False.
+            409: Database integrity failure.
+    """
+    village_ids = list(set(village_ids)) 
 
     try:
         # 1. Fetch + validate agent
@@ -54,11 +85,10 @@ def assign_villages_to_agent_service(
         # 3. Assign correctly
         for v in villages:
             if v.agent_id is None:
-                v.agent_id = agent.id
+                continue
 
             elif v.agent_id == agent.id:
                 already_assigned_ids.append(v.id)
-                continue
 
             else:
                 if not force:
@@ -67,7 +97,11 @@ def assign_villages_to_agent_service(
                         detail=f"Village {v.id} already assigned to another agent"
                     )
                 logger.info(f"Force reassignment applied | village_id={v.id}")
+                
+        for v in villages:
+            if v.agent_id != agent.id:
                 v.agent_id = agent.id
+
         session.commit()
 
 
@@ -113,6 +147,39 @@ def replace_villages_to_agent_service(
         agent_public_id: str,
         village_ids: list[int]
 ):
+    """
+    Replace all village assignments for a given agent.
+
+    This service performs a full replacement of villages assigned to an agent.
+    Existing assignments are removed and replaced with the provided list.
+
+    Behavior:
+        - If `village_ids` is empty:
+            • All currently assigned villages are unassigned
+        - If `village_ids` is provided:
+            • Villages currently assigned but not in the new list are unassigned
+            • Villages in the new list are assigned to the agent
+            • Overlapping villages remain unchanged
+
+    The operation is atomic:
+        - All changes are committed together
+        - On failure, no partial updates are persisted
+
+    Parameters:
+        - session (Session): Database session
+        - agent_public_id (str): Public identifier of the target agent
+        - village_ids (list[int]): Final set of village IDs to assign
+
+    Returns:
+        - list[VillageRead]:
+            Updated list of villages assigned to the agent after replacement
+
+    Raises:
+        - HTTPException:
+            • 404 → Agent not found or any village ID is invalid
+            • 400 → User is not an agent
+            • 409 → Database integrity failure during commit
+    """
     village_ids = list(set(village_ids))
 
     try:
@@ -175,7 +242,15 @@ def replace_villages_to_agent_service(
                 f"Village replacement diff | remove={len(ids_to_remove)} | add={len(to_add_ids)}"
             )
         
-        # 5. unassing removed villages
+        # conflict check BEFORE any mutation
+        for v in villages:
+            if v.agent_id is not None and v.agent_id != agent.id:
+                raise HTTPException(
+                        status_code=400,
+                        detail=f"Village {v.id} already assigned to another agent"
+                    )
+
+        # 5. unassign 
         for v in current_villages:
             if v.id in ids_to_remove:
                 v.agent_id = None

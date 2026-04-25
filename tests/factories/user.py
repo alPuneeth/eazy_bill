@@ -1,16 +1,20 @@
 from sqlalchemy.exc import IntegrityError
-
-from app.models.core_models.user import UserRole, User
 import uuid
 import random
 import string
+
+from app.models.core_models.user import UserRole, User
+from app.core.security import get_password_hash
+
+TEST_PASSWORD = "test_Password@123"
 
 def create_user(
         session,
         public_id=None, 
         phone=None,
         user_code=None,
-        role=UserRole.AGENT
+        role=UserRole.AGENT,
+        is_active=True
         ):
     """
     Create and persist a user for tests.
@@ -18,7 +22,14 @@ def create_user(
     """
 
     public_id = public_id or str(uuid.uuid4())
-    phone = phone or f"{uuid.uuid4().int % 10**10:010d}"
+    phone = phone or "".join(random.choices(string.digits, k=10))
+    hashed_password=get_password_hash(TEST_PASSWORD)
+
+    if role == UserRole.ADMIN and not user_code:
+        user_code="KVR"
+    
+    elif role == UserRole.TEST_USER and not user_code:
+        user_code="TST"
 
     if user_code:
         codes = [user_code]
@@ -35,9 +46,10 @@ def create_user(
                     public_id=public_id,
                     name="Fake User",
                     phone=phone,
-                    hashed_password="test_hash",
+                    hashed_password=hashed_password,
                     role=role,
-                    user_code=code
+                    user_code=code,
+                    is_active=is_active
                     )
                 
                 session.add(user) # staged in memory

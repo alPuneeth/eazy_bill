@@ -1,7 +1,5 @@
-from sqlmodel import select
-
-from app.models.core_models.user import User
 from tests.factories.user import create_user
+from app.core.security import get_password_hash
 
 
 def test_login_success(client, session):
@@ -15,9 +13,7 @@ def test_login_success(client, session):
     - last_login_at is updated in the database
     """
 
-    from app.core.security import get_password_hash
-
-    password = "secret123"
+    password = "Secret@123"
 
     user = create_user(session, phone="9999999999")
     user.hashed_password = get_password_hash(password)
@@ -49,11 +45,11 @@ def test_login_wrong_password(client, session):
     Asserts:
     - HTTP 401 response
     - Proper error message
+    - last_login_at is NOT updated
     """
-    from app.core.security import get_password_hash
 
-    correct_password = "secret321"
-    wrong_password = "reveal123"
+    correct_password = "Secret@321"
+    wrong_password = "Reveal#123"
 
     user = create_user(session, phone="9999999990")
     user.hashed_password = get_password_hash(correct_password)
@@ -71,4 +67,60 @@ def test_login_wrong_password(client, session):
 
     assert response.status_code == 401
     assert data["detail"] == "Invalid credentials"
+
+    session.refresh(user)
+    assert user.last_login_at is None
+
+
+def test_login_inactive_user(client, session):
+    """
+    Verify that inactive users cannot log in.
+
+    Asserts:
+    - HTTP 403 response
+    - Proper error message
+    - last_login_at is NOT updated
+    """
+    password = "secret123"
+
+    user = create_user(session, is_active=False)
+    user.hashed_password = get_password_hash(password)
+
+    session.add(user)
+    session.commit()
+
+    payload = {
+        "phone": user.phone,
+        "password": password
+    }
+
+    response = client.post("/auth/", json=payload)
+    data = response.json()
+
+    assert response.status_code == 403
+    assert data["detail"] == "Inactive user"
+
+    session.refresh(user)
+    assert user.last_login_at is None
+
+
+def test_login_user_not_found(client, session):
+    """
+    Verify that login fails when the user does not exist.
+
+    Asserts:
+    - HTTP 401 response
+    - Proper error message
+    """
+    payload = {
+        "phone": "8888888888",  # valid format, but not in DB
+        "password": "anypassword"
+    }
+
+    response = client.post("/auth/", json=payload)
+    data = response.json()
+
+    assert response.status_code == 401
+    assert data["detail"] == "Invalid credentials"
+
     

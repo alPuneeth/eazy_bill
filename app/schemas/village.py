@@ -49,11 +49,6 @@ class VillageCreate(BaseModel):
     )
     village_code: VillageCodeStr
 
-    # agent_public_id: Optional[str] = Field(
-    #     default=None,
-    #     description="Enforces ownership of Villages"
-    # )
-
 
 class VillageRead(BaseModel):
     model_config = {"from_attributes": True}

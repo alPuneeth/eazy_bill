@@ -1,6 +1,5 @@
-import uuid
-
-from sqlalchemy.exc import IntegrityError
+import random
+import string
 
 from app.models.lookup.village import Village
 
@@ -8,39 +7,24 @@ from app.models.lookup.village import Village
 def create_village(
         session,
         name=None,
-        code=None,
-        postal="577000",
-        agent=None
+        village_code=None,
+        postal_code=None
         ):
     """
-    Create and persist a test village in the database.
-
-    Optionally assigns it to an agent to simulate ownership.
-    Returns the created village instance.
+    Create a valid village for tests.
     """
 
-    name = name or f"Village-{uuid.uuid4().hex[:6]}"
-    code = code or uuid.uuid4().hex[:6].upper()
+    name = name or "Village_" + "".join(random.choices(string.ascii_uppercase, k=5))
+    postal_code = postal_code or "".join(random.choices(string.digits, k=6))
+    village_code = village_code or "VC_" + "".join(random.choices(string.ascii_uppercase + string.digits, k=5))
 
-    for _ in range(5):
-        try:
-            with session.begin_nested():
+    village = Village(
+        name=name,
+        postal_code=postal_code,
+        village_code=village_code
+    )
 
-                village = Village(
-                    name=name,
-                    postal_code=postal,
-                    village_code=code,
-                    agent=agent
-                )
+    session.add(village)
+    session.flush()
 
-                session.add(village)
-                session.flush()
-
-                return village
-
-        except IntegrityError:
-            # regenerate only conflicting fields
-            code = uuid.uuid4().hex[:6].upper()
-            name = f"Village-{uuid.uuid4().hex[:6]}"
-
-    raise RuntimeError("Failed to create unique village")
+    return village

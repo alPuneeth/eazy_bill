@@ -61,7 +61,7 @@ def test_assign_villages_to_agent_duplicate(client, session):
 
     assert response.status_code == 200
     assert len(data["assigned"]) == 0
-    assert data["already_assigned"][0] == v1.id
+    assert v1.id in data["already_assigned"]
 
 
 def test_assign_villages_conflict(client, session):
@@ -73,14 +73,17 @@ def test_assign_villages_conflict(client, session):
     agent1 = create_agent(session)
     agent2 = create_agent(session)
 
-    v1 = create_village(session, agent=agent1)
+    v1 = create_village(session)
 
     payload = {"village_ids": [v1.id], "force": False}
 
+    client.post(f"/agent/{agent1.public_id}/villages", json=payload)
+
     response = client.post(f"/agent/{agent2.public_id}/villages", json=payload)
+    data = response.json()
 
     assert response.status_code == 400
-    assert "already assigned" in response.json()["detail"].lower()
+    assert "already assigned" in data["detail"].lower()
 
 
 def test_assign_villages_force(client, session):
@@ -91,17 +94,18 @@ def test_assign_villages_force(client, session):
     agent1 = create_agent(session)
     agent2 = create_agent(session)
 
-    v1 = create_village(session, agent=agent1) 
+    v1 = create_village(session) 
+
+    payload = {"village_ids": [v1.id], "force": False}
+    client.post(f"/agent/{agent1.public_id}/villages", json=payload)
 
     payload = {"village_ids": [v1.id], "force": True}
+    reassign_response = client.post(f"/agent/{agent2.public_id}/villages", json=payload)
 
-    response = client.post(f"/agent/{agent2.public_id}/villages", json=payload)
+    assert reassign_response.status_code == 200
+    data = reassign_response.json()
 
-    assert response.status_code == 200
-    
-    data = response.json()
     assert len(data["assigned"]) == 1
-
     updated_village = session.exec(
         select(Village).where(Village.id == v1.id)
         ).one()
@@ -121,11 +125,21 @@ def test_replace_villages_success(client, session):
     # set up agent
     agent = create_agent(session)
 
-    # existing villages - agent is assigned
-    v1 = create_village(session, agent=agent)
-    v2 = create_village(session, agent=agent)
+    # set up villages to be assigned
+    v1 = create_village(session)
+    v2 = create_village(session)
 
-    # new villages - unassigned villages
+    payload = {
+        "village_ids": [v1.id, v2.id]
+    }
+
+    # assign
+    client.put(
+        f"/agent/{agent.public_id}/villages",
+        json=payload
+        )
+
+    # new unassigned villages
     v3 = create_village(session)
     v4 = create_village(session)
 
@@ -164,7 +178,14 @@ def test_replace_villages_empty(client, session):
     """
     agent = create_agent(session)
 
-    v1 = create_village(session, agent=agent)
+    v1 = create_village(session)
+
+    payload = {"village_ids": [v1.id]}
+
+    client.put(
+        f"/agent/{agent.public_id}/villages",
+        json=payload
+    )
 
     payload = {"village_ids": []}
 

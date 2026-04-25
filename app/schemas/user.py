@@ -5,6 +5,12 @@ from datetime import datetime
 from app.models.core_models.user import UserRole
 from app.schemas.village import VillageRead
 
+StrongPassword = Annotated[
+    str,
+    StringConstraints(
+        min_length=8
+    )
+]
 
 NonEmptyStr = Annotated[
                 str,
@@ -27,10 +33,12 @@ UserCodeStr = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
-        min_length=3,
-        max_length=3
+        pattern=r"^[A-Z0-9]{3}$"
     )
 ]
+
+RESERVED_USER_CODES = {"KVR", "TST"}
+
 
 class UserCreate(BaseModel):
     name: NonEmptyStr = Field(
@@ -40,8 +48,7 @@ class UserCreate(BaseModel):
     phone: PhoneStr = Field(
         description="Phone number of the user"
     )
-    password: str = Field(
-        min_length=6,
+    password: StrongPassword = Field(
         description="Plain password (will be hashed server-side)"
     )
     role: UserRole = Field(
@@ -55,7 +62,8 @@ class UserCreate(BaseModel):
     user_code: Optional[UserCodeStr] = None
 
     @model_validator(mode="after")
-    def validate_user_code(self):
+    def validate_user(self):
+        # --- user_code validation ---
         if self.role == UserRole.ADMIN:
             if self.user_code and self.user_code != "KVR":
                 raise ValueError("ADMIN user_code must be 'KVR'")
@@ -63,16 +71,34 @@ class UserCreate(BaseModel):
 
         elif self.role == UserRole.TEST_USER:
             if self.user_code and self.user_code != "TST":
-                raise ValueError("Test_user user_code must be 'TST'")
+                raise ValueError("TEST_USER user_code must be 'TST'")
             self.user_code = "TST"
 
         elif self.role == UserRole.AGENT:
             if not self.user_code:
                 raise ValueError("user_code is required for AGENT role")
-        
-            self.user_code = self.user_code.upper()
+            
+            code = self.user_code.upper()
+            
+            if code in RESERVED_USER_CODES:
+                raise ValueError("user_code is reserved and cannot be used for AGENT")
 
-        return self
+            self.user_code = code
+
+        # --- password validation ---
+        v = self.password
+
+        if (
+            not any(c.islower() for c in v) or
+            not any(c.isupper() for c in v) or
+            not any(c.isdigit() for c in v) or
+            not any(not c.isalnum() for c in v)
+        ):
+            raise ValueError(
+                "Password must include lowercase, uppercase, digit, and special character"
+            )
+
+        return self 
 
 
 class UserRead(BaseModel):
@@ -113,7 +139,14 @@ class UserUpdate(BaseModel):
         if self.user_code is not None:
             if not self.user_code:  
                 raise ValueError("user_code cannot be empty")
-            self.user_code = self.user_code.upper()
+
+            code = self.user_code.upper()
+
+            if code in RESERVED_USER_CODES:
+                raise ValueError("user_code is reserved")
+            
+            self.user_code = code
+
         return self
 
 
