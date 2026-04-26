@@ -3,6 +3,8 @@ import random
 import string
 
 from app.models.core_models.customer import Customer
+from app.models.lookup.customer_type import CustomerType, CustomerTypeEnum
+from app.models.lookup.status import StatusEnum
 
 
 def create_customer(
@@ -36,3 +38,14 @@ def create_customer(
     session.flush()
 
     return customer
+
+
+def create_customer_type(session, name=CustomerTypeEnum.REGULAR):
+    obj = CustomerType(
+        public_id=str(uuid.uuid4()),
+        name=name
+    )
+
+    session.add(obj)
+    session.flush()
+    return obj

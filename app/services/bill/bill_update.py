@@ -99,6 +99,8 @@ def update_bll(
     except IntegrityError:
         session.rollback()
         raise BillConflictError()
+    
+    package = session.get(Package, bill.package_id)
 
     creator = session.get(User, bill.created_by_id)
     if not creator:

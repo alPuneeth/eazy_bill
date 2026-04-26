@@ -56,7 +56,8 @@ class User(TimestampMixin, SQLModel, table=True):
         ...,
         nullable=False,
         unique=True,
-        max_length=15
+        min_length=10,
+        max_length=10
         )
 
     hashed_password: str = Field(

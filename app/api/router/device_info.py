@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.db.session import get_session
 from app.services.devices.device_info import build_deviceinfo_read
-from app.models.lookup.status import Status
+from app.models.lookup.status import Status, StatusEnum
 from app.models.core_models.customer import Customer
 from app.dependencies.auth import get_current_user
 from app.models.core_models.user import User
@@ -146,8 +146,24 @@ def update_device_info(
 
     # Optional reference validation
     if "status_id" in update_data:
-        if not session.get(Status, update_data["status_id"]):
+        new_status = session.get(Status, update_data["status_id"])
+        if not new_status:
             raise HTTPException(status_code=400, detail="Invalid status")
+
+        current_status = session.get(Status, device_info.status_id)
+
+        # Allow only ARCHIVED or restore from ARCHIVED
+        if new_status.name == StatusEnum.ARCHIVED:
+            pass
+
+        elif current_status.name == StatusEnum.ARCHIVED and new_status.name == StatusEnum.INACTIVE:
+            pass
+
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Customer cannot be activated without a valid bill"
+            )
 
     if "tvtype_id" in update_data:
         if not session.get(TVType, update_data["tvtype_id"]):

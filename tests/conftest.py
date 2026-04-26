@@ -1,12 +1,17 @@
-from fastapi import FastAPI
+import uuid
 import pytest
+
+from fastapi import FastAPI
 from sqlmodel import SQLModel, Session, create_engine
 from fastapi.testclient import TestClient
+
 from app.db.session import get_session
+from app.dependencies.auth import get_current_user
 from app.dependencies.rbac import require_admin
 from app.main import app as fastapi_app
 from app.core.config import settings
-import app.models
+from app.models.core_models.user import User, UserRole
+from tests.factories.user import create_user
 
 fastapi_app:FastAPI
 
@@ -33,6 +38,9 @@ def session(engine):
     transaction = connection.begin()
 
     session = Session(bind=connection)
+
+    connection.begin_nested() # SAVEPOINT
+
     yield session
 
     session.close()
@@ -43,14 +51,22 @@ def session(engine):
 @pytest.fixture(scope="function")
 def client(session):
 
+    # create real user in DB
+    test_user = create_user(session, role=UserRole.ADMIN)
+    session.commit()
+
     def override_get_session():
         yield session
 
     def override_require_admin():
         return True # bypass RBAC
     
+    def override_get_current_user():
+        return test_user
+    
     fastapi_app.dependency_overrides[get_session] = override_get_session
     fastapi_app.dependency_overrides[require_admin] = override_require_admin
+    fastapi_app.dependency_overrides[get_current_user] = override_get_current_user
 
 
     with TestClient(fastapi_app) as c:
@@ -58,4 +74,5 @@ def client(session):
     
     fastapi_app.dependency_overrides.pop(get_session, None)
     fastapi_app.dependency_overrides.pop(require_admin, None)
+    fastapi_app.dependency_overrides.pop(get_current_user, None)
 

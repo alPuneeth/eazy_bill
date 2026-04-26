@@ -25,7 +25,9 @@ PhoneStr = Annotated[
                 str,
                 StringConstraints(
                     strip_whitespace=True,
-                    pattern=r"^\d{10,15}$"
+                    min_length=10,
+                    max_length=10,
+                    pattern=r"^\d{10}$"
                     )
                 ]
 

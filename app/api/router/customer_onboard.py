@@ -1,4 +1,6 @@
 import logging
+
+from app.services.customer.delete_customer import delete_customer_service
 logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -9,6 +11,7 @@ from app.db.session import get_session
 from app.schemas.pagination.pag_response import PaginatedResponse
 from app.services.customer.single_query_build import build_customer_onboard_list
 from app.services.customer_onboard import onboard_single_customer
+from app.dependencies.rbac import require_admin
 from app.services.pagination.paginate_func import paginate
 from app.schemas.customers.bulk_onboard import (
     CustomerOnboardBulkCreate,
@@ -34,8 +37,7 @@ from app.schemas.customers.customer_onboard import (
 
 router = APIRouter(
     prefix="/customer",
-    tags=["Customer"],
-    dependencies=[Depends(get_current_user)]
+    tags=["Customer"]
     )
 
 
@@ -148,7 +150,10 @@ def list_archived_customers(
             "page_size": page_size
         }
     )
-        raise HTTPException(500, "Internal server error")
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error"
+            )
 
 
 # GET ONE -single payload
@@ -273,3 +278,19 @@ def update_customer(
         raise HTTPException(status_code=409, detail="Constraint violation")
 
     return build_customer_onboard_read(customer.public_id, session, current_user)
+
+
+@router.delete("/{customer_public_id}")
+def delete_customer(
+    customer_public_id: str,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_admin)
+):
+    try:
+        delete_customer_service(customer_public_id, session, current_user)
+        session.commit() 
+
+    except ValueError:
+        session.rollback()
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return {"message": "Customer deleted successfully"}
