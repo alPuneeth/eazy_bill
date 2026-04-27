@@ -36,8 +36,11 @@ def sync_device_status_from_bills(
         if device.status_id not in (active_status_id, inactive_status_id):
             continue
 
-        device.status_id = (
+        new_status = (
             active_status_id if has_active_bill else inactive_status_id
         )
 
-        session.add(device)
+        # update only if status actually changes
+        if device.status_id != new_status:
+            device.status_id = new_status
+            session.add(device)
