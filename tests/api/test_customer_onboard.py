@@ -262,3 +262,158 @@ def test_update_customer_not_found(client):
     response = client.patch("/customer/non-existent-id", json=payload)
 
     assert response.status_code == 404
+
+
+def test_create_customers_bulk_success(client, session):
+    """
+    Verify bulk onboarding succeeds for valid customers.
+    """
+    # --- setup ---
+    village = create_village(session)
+    package = create_package(session)
+    customer_type = create_customer_type(session, CustomerTypeEnum.REGULAR)
+    status = create_status(session)
+
+    ftth64 = FTTH64(name="FTTH-TEST")
+    session.add(ftth64)
+    session.commit()
+
+    payload = {
+        "customers": [
+            {
+                "name": "User1",
+                "phone": "9000000001",
+                "vc_number": "VCB1",
+                "status_id": status.id,
+                "village_id": village.id,
+                "customer_type_id": customer_type.id,
+                "ftth64_id": ftth64.id,
+                "package_id": package.id
+            },
+            {
+                "name": "User2",
+                "phone": "9000000002",
+                "vc_number": "VCB2",
+                "status_id": status.id,
+                "village_id": village.id,
+                "customer_type_id": customer_type.id,
+                "ftth64_id": ftth64.id,
+                "package_id": package.id
+            }
+        ]
+    }
+
+    response = client.post("/customer/bulk", json=payload)
+    data = response.json()
+
+    assert response.status_code == 200
+    assert len(data["success"]) == 2
+    assert data["failed"] == []
+
+
+def test_create_customers_bulk_partial_failure(client, session):
+    """
+    Verify that invalid entries fail while valid ones succeed.
+    """
+
+    village = create_village(session)
+    package = create_package(session)
+    customer_type = create_customer_type(session, CustomerTypeEnum.REGULAR)
+    status = create_status(session)
+
+    ftth64 = FTTH64(name="FTTH-TEST")
+    session.add(ftth64)
+    session.commit()
+
+    payload = {
+        "customers": [
+            {
+                "name": "Valid User",
+                "phone": "9000000003",
+                "vc_number": "VCB3",
+                "status_id": status.id,
+                "village_id": village.id,
+                "customer_type_id": customer_type.id,
+                "ftth64_id": ftth64.id,
+                "package_id": package.id
+            },
+            {
+                # ❌ missing vc_number → validation error
+                "name": "Invalid User",
+                "phone": "9000000004",
+                "status_id": status.id,
+                "village_id": village.id,
+                "customer_type_id": customer_type.id,
+                "ftth64_id": ftth64.id,
+                "package_id": package.id
+            }
+        ]
+    }
+
+    response = client.post("/customer/bulk", json=payload)
+    data = response.json()
+
+    assert response.status_code == 200
+    assert len(data["success"]) == 1
+    assert len(data["failed"]) == 1
+
+
+def test_create_customers_bulk_duplicate_phone(client, session):
+    """
+    Verify duplicate phone causes partial failure in bulk onboarding.
+    """
+
+    from tests.factories.village import create_village
+    from tests.factories.package import create_package
+    from tests.factories.customer import create_customer_type
+    from tests.factories.status import create_status
+    from app.models.lookup.customer_type import CustomerTypeEnum
+    from app.models.lookup.ftth64 import FTTH64
+
+    # --- setup ---
+    village = create_village(session)
+    package = create_package(session)
+    customer_type = create_customer_type(session, CustomerTypeEnum.REGULAR)
+    status = create_status(session)
+
+    ftth64 = FTTH64(name="FTTH-TEST")
+    session.add(ftth64)
+    session.commit()
+
+    # --- payload ---
+    payload = {
+        "customers": [
+            {
+                "name": "User1",
+                "phone": "9000000010",
+                "vc_number": "VCX1",
+                "status_id": status.id,
+                "village_id": village.id,
+                "customer_type_id": customer_type.id,
+                "ftth64_id": ftth64.id,
+                "package_id": package.id
+            },
+            {
+                # ❌ duplicate phone
+                "name": "User2",
+                "phone": "9000000010",
+                "vc_number": "VCX2",
+                "status_id": status.id,
+                "village_id": village.id,
+                "customer_type_id": customer_type.id,
+                "ftth64_id": ftth64.id,
+                "package_id": package.id
+            }
+        ]
+    }
+
+    # --- API call ---
+    response = client.post("/customer/bulk", json=payload)
+    data = response.json()
+
+    # --- assertions ---
+    assert response.status_code == 200
+    assert len(data["success"]) == 1
+    assert len(data["failed"]) == 1
+
+
