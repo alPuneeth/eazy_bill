@@ -36,7 +36,7 @@ def get_bills_created_by_agent(
         .join(Customer, Customer.id == Bill.customer_id)
         .join(Package, Package.id == Bill.package_id)
         .where(User.public_id == agent_public_id)
-        .order_by(Bill.bill_date.desc())
+        .order_by(Bill.bill_date.desc(), Bill.id.desc())
     )
 
     rows = session.exec(stmt).all()

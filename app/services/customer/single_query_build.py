@@ -1,5 +1,6 @@
 from sqlmodel import Session
 from sqlalchemy import select, func
+from sqlalchemy.orm import aliased
 
 from app.schemas.customers.customer_onboard import CustomerOnboardRead
 from app.schemas.common import IdValueRead, VillageSummary, CreatorSummary
@@ -26,6 +27,7 @@ def build_customer_onboard_list(session: Session, current_user:User) -> list[Cus
     - Safe for dirty data
     - No N+1 queries
     """
+    BillPackage = aliased(Package)
 
     # ---- subquery to determine latest bill per customer ----
     latest_bill_sq = (
@@ -48,6 +50,7 @@ def build_customer_onboard_list(session: Session, current_user:User) -> list[Cus
             TVType,
             Status,
             Bill,
+            BillPackage,
             User
         )
         .outerjoin(Village, Village.id == Customer.village_id)
@@ -66,6 +69,7 @@ def build_customer_onboard_list(session: Session, current_user:User) -> list[Cus
                 Bill.id == latest_bill_sq.c.max_bill_id 
                    )
         .outerjoin(User, User.id == Bill.created_by_id)
+        .outerjoin(BillPackage, BillPackage.id == Bill.package_id)
         .order_by(Customer.created_at.desc())
     )
 
@@ -86,6 +90,7 @@ def build_customer_onboard_list(session: Session, current_user:User) -> list[Cus
         tvtype,
         status,
         bill,
+        bill_package,
         creator
     ) in rows:
 
@@ -103,8 +108,8 @@ def build_customer_onboard_list(session: Session, current_user:User) -> list[Cus
                                 customer_public_id=customer.public_id,
 
                                 package_id=(
-                                    IdValueRead(id=package_.id, value=package_.name)
-                                    if package_ else None
+                                    IdValueRead(id=bill_package.id, value=bill_package.name)
+                                    if bill_package else None
                                 ),
                                 created_by_id=(
                                     CreatorSummary(id=creator.id, public_id=creator.public_id, name=creator.name)

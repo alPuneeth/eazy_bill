@@ -31,7 +31,7 @@ def get_customer_bills_all_time(
     if current_user.role == "agent":
         village = session.get(Village, customer.village_id)
 
-        if not village or village.agent_restricted:
+        if not village or village.agent_id != current_user.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied for this customer"
@@ -41,8 +41,8 @@ def get_customer_bills_all_time(
         select(Bill)
         .where(Bill.customer_id == customer.id)
         .options(
-                    selectinload(Bill.package),
-                    selectinload(Bill.created_by)
+                selectinload(Bill.package),
+                selectinload(Bill.created_by)
                     )
         .order_by(Bill.bill_date.desc())
     )
@@ -66,7 +66,7 @@ def get_customer_bills_all_time(
 
         created_by_id=CreatorSummary(
             id=bill.created_by_id,
-            public_id=bill.public_id,
+            public_id=bill.created_by.public_id,
             name=bill.created_by.name
         ),
 

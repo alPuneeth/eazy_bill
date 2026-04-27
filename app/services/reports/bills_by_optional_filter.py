@@ -51,7 +51,7 @@ def bill_op_filters(
             User.name.label("created_by_name"),
         )
         .join(Customer, Bill.customer_id == Customer.id)
-        .join(Package, Customer.package_id == Package.id)
+        .join(Package, Bill.package_id == Package.id)
         .join(User, Bill.created_by_id == User.id)
     )
     
@@ -134,30 +134,32 @@ def bill_op_filters(
         total_stmt = (
             select(func.sum(Bill.bill_amount))
             .join(Customer, Bill.customer_id == Customer.id)
-            .join(Package, Customer.package_id == Package.id)
+            .join(Package, Bill.package_id == Package.id)
             .join(User, Bill.created_by_id == User.id)
         )
 
-    if filters.agent_ids:
-        total_stmt = total_stmt.join(Village, Customer.village_id == Village.id)
-
-    if filters.from_date:
-        total_stmt = total_stmt.where(Bill.bill_date >= from_dt)
-
-    if filters.to_date:
-        total_stmt = total_stmt.where(Bill.bill_date <= to_dt)
-
-    if filters.village_ids:
-        total_stmt = total_stmt.where(Customer.village_id.in_(filters.village_ids))
-
-    if filters.ftth64_ids:
-        total_stmt = total_stmt.where(Customer.ftth64_id.in_(filters.ftth64_ids))
-
-    if filters.agent_ids:
-        total_stmt = total_stmt.where(Village.agent_id.in_(filters.agent_ids))
-
-    total_amount = session.exec(total_stmt).one() or 0
+        if filters.agent_ids or current_user.role == UserRole.AGENT:
+            total_stmt = total_stmt.join(Village, Customer.village_id == Village.id)
         
+        if current_user.role == UserRole.AGENT:
+            total_stmt = total_stmt.where(Village.agent_id == current_user.id)
+
+        if filters.from_date:
+            total_stmt = total_stmt.where(Bill.bill_date >= from_dt)
+
+        if filters.to_date:
+            total_stmt = total_stmt.where(Bill.bill_date <= to_dt)
+
+        if filters.village_ids:
+            total_stmt = total_stmt.where(Customer.village_id.in_(filters.village_ids))
+
+        if filters.ftth64_ids:
+            total_stmt = total_stmt.where(Customer.ftth64_id.in_(filters.ftth64_ids))
+
+        if filters.agent_ids:
+            total_stmt = total_stmt.where(Village.agent_id.in_(filters.agent_ids))
+
+        total_amount = session.exec(total_stmt).one() or 0
 
     return BillFilterResponse(
         data=data,

@@ -18,6 +18,7 @@ from app.schemas.device_info import (
     DeviceInfoRead,
     DeviceInfoUpdate
 )
+from app.services.status_ids import get_active_inactive_status_ids
 
 router = APIRouter(
     prefix="/device_info",
@@ -91,6 +92,8 @@ def create_device_info(
         customer=customer,
         current_user=current_user,
         session=session)
+    
+    active_status_id, _ = get_active_inactive_status_ids(session)
 
     # Explicit ORM construction (NO model_validate)
     device_info = DeviceInfo(
@@ -101,7 +104,7 @@ def create_device_info(
         previous_vc_number=payload.previous_vc_number,
         tv_name=payload.tv_name,
         tvtype_id=payload.tvtype_id,
-        status_id=payload.status_id,
+        status_id=active_status_id,
     )
 
     session.add(device_info)
