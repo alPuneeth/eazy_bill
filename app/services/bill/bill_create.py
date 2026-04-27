@@ -53,18 +53,6 @@ def create_bll(
     package = session.get(Package, payload.package_id)
     if not package:
         raise InvalidPackageError()
-
-    # Prevents overlapping billing periods to ensure consistent subscription timelines
-    existing_overlap = session.exec(
-    select(Bill).where(
-        Bill.customer_id == customer.id,
-        Bill.start_date < payload.end_date,
-        Bill.end_date > payload.start_date
-    )
-    ).first()
-
-    if existing_overlap:
-        raise OverlappinBillingPeriod()
     
 
     # 3. Create bill
@@ -80,31 +68,44 @@ def create_bll(
         created_by_id=current_user.id,
     )
 
-    session.add(bill)
-
     try:
-        # 4. Persist bill
-        session.commit()
-        session.refresh(bill)
+        with session.begin():
 
-        # 5. Status resolution
-        active_status_id, inactive_status_id = (
-            get_active_inactive_status_ids(session)
-        )
+            session.exec(
+                select(Customer)
+                .where(Customer.id == customer.id)
+                .with_for_update()
+                ).one()
+            
+            # Prevents overlapping billing periods to ensure consistent subscription timelines
+            existing_overlap = session.exec(
+            select(Bill).where(
+                Bill.customer_id == customer.id,
+                Bill.start_date <= payload.end_date,
+                Bill.end_date >= payload.start_date
+            )
+            ).first()
 
-        # 6. Sync devices
-        sync_device_status_from_bills(
-            customer_id=customer.id,
-            session=session,
-            active_status_id=active_status_id,
-            inactive_status_id=inactive_status_id,
-        )
+            if existing_overlap:
+                raise OverlappinBillingPeriod()
+             
+            session.add(bill)
+            session.flush()
 
-        # 7. Persist device updates
-        session.commit()
+            # 5. Status resolution
+            active_status_id, inactive_status_id = (
+                get_active_inactive_status_ids(session)
+            )
+
+            # 6. Sync devices
+            sync_device_status_from_bills(
+                customer_id=customer.id,
+                session=session,
+                active_status_id=active_status_id,
+                inactive_status_id=inactive_status_id,
+            )
 
     except IntegrityError:
-        session.rollback()
         raise BillConflictError()
 
     # 8. Map response

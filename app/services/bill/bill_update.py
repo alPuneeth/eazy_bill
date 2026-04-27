@@ -16,7 +16,8 @@ from app.services.bill.bill_exceptions import (
     InvalidPackageError,
     BillNotFoundError,
     BillUpdateNotAllowedError,
-    EmptyUpdateError
+    EmptyUpdateError,
+    OverlappinBillingPeriod
 )
 from app.services.customer.enforce_customer_vis import enforce_customer_visibility
 from app.services.device_status import sync_device_status_from_bills
@@ -69,35 +70,54 @@ def update_bll(
         if not package:
             raise InvalidPackageError()
     
-    # 6. Apply Updates
-    for key, value in update_data.items():
-        setattr(bill, key, value)
-
-    session.add(bill)  # flush() works if bill is added
-
     try:
-        # 7. flush() generates bill.id without committing - prepare changes
-        session.flush()
+        with session.begin(): 
+            # lock customer (same as create)
+            session.exec(
+                select(Customer)
+                .where(Customer.id == customer.id)
+                .with_for_update()
+            ).one()
 
-        # 8. Resolve status ids
-        active_status_id, inactive_status_id = (
-            get_active_inactive_status_ids(session)
-        )
+            new_start = update_data.get("start_date", bill.start_date)
+            new_end = update_data.get("end_date", bill.end_date)
 
-        # 9. Sync device status
-        sync_device_status_from_bills(
-            customer_id=bill.customer_id,
-            session=session,
-            active_status_id=active_status_id,
-            inactive_status_id=inactive_status_id,
-        )
+            # overlap check excluding current bill
+            existing_overlap = session.exec(
+                select(Bill).where(
+                    Bill.customer_id == customer.id,
+                    Bill.id != bill.id,   # 🔥 critical
+                    Bill.start_date <= new_end,
+                    Bill.end_date >= new_start
+                )
+            ).first()
 
-        # 10. Persist device updates - Single atomic commit
-        session.commit() # finalize changes
-        session.refresh(bill)
+            if existing_overlap:
+                raise OverlappinBillingPeriod()
+            
+            # mutation
+            for key, value in update_data.items():
+                setattr(bill, key, value)
+
+            session.add(bill)
+
+            # 7. flush() generates bill.id without committing - prepare changes
+            session.flush()
+
+            # 8. Resolve status ids
+            active_status_id, inactive_status_id = (
+                get_active_inactive_status_ids(session)
+            )
+
+            # 9. Sync device status
+            sync_device_status_from_bills(
+                customer_id=bill.customer_id,
+                session=session,
+                active_status_id=active_status_id,
+                inactive_status_id=inactive_status_id,
+            )
 
     except IntegrityError:
-        session.rollback()
         raise BillConflictError()
     
     package = session.get(Package, bill.package_id)
