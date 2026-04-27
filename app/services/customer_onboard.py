@@ -8,8 +8,8 @@ from app.models.lookup.village import Village
 from app.models.lookup.customer_type import CustomerType
 from app.models.lookup.package import Package
 from app.models.lookup.ftth64 import FTTH64
-from app.models.lookup.status import Status
 from app.models.lookup.tv_type import TVType
+from app.services.status_ids import get_active_inactive_status_ids
 
 
 def onboard_single_customer(
@@ -27,9 +27,6 @@ def onboard_single_customer(
     if not village:
         raise ValueError("Invalid village")
 
-    # if current_user.role == "agent" and village.agent_id != current_user.id:
-    #     raise PermissionError("Restricted village")
-
     if not session.get(CustomerType, payload.customer_type_id):
         raise ValueError("Invalid customer type")
 
@@ -39,12 +36,11 @@ def onboard_single_customer(
     if not session.get(Package, payload.package_id):
         raise ValueError("Invalid package")
 
-    if not session.get(Status, payload.status_id):
-        raise ValueError("Invalid status")
-
     if payload.tvtype_id is not None:
         if not session.get(TVType, payload.tvtype_id):
             raise ValueError("Invalid TV type")
+    
+    _, inactive_status_id = get_active_inactive_status_ids(session)
 
     # 1. Customer
     customer = Customer(
@@ -73,7 +69,7 @@ def onboard_single_customer(
         previous_vc_number=payload.previous_vc_number,
         tv_name=payload.tv_name,
         tvtype_id=payload.tvtype_id,
-        status_id=payload.status_id,
+        status_id=inactive_status_id,
     )
 
     session.add(device)
