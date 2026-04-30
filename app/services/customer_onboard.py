@@ -26,6 +26,9 @@ def onboard_single_customer(
     village = session.get(Village, payload.village_id)
     if not village:
         raise ValueError("Invalid village")
+    
+    if current_user.role == "agent" and village.agent_id != current_user.id:
+        raise PermissionError("Restricted village")
 
     if not session.get(CustomerType, payload.customer_type_id):
         raise ValueError("Invalid customer type")

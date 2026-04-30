@@ -1,4 +1,4 @@
-from app.schemas.village import VillageRead
+from app.schemas.lookup.village import VillageRead
 from app.models.lookup.village import Village
 
 

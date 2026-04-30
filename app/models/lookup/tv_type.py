@@ -1,12 +1,14 @@
 # standard library
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 # third-party
 from sqlmodel import SQLModel, Field, Relationship
 
 # local module
 from app.models.utilities import TimestampMixin
-from app.models.devices.device_info import DeviceInfo
+
+if TYPE_CHECKING:
+    from app.models.devices.device_info import DeviceInfo
 
 
 class TVType(TimestampMixin, SQLModel, table=True):
@@ -14,14 +16,13 @@ class TVType(TimestampMixin, SQLModel, table=True):
     TVType represents the type or technology of a television
     device, such as LED, LCD, OLED, etc.
 
-    This model is descriptive in nature and may contain multiple
-    rows with the same name if required (for example, variations
-    across vendors or contexts). It is not a canonical lookup
-    table enforcing one row per value.
+    This model acts as a canonical lookup table where each
+    TV type exists exactly once, enforced by a unique constraint
+    on the name field.
 
     The model defines database structure only.
-    Any normalization or reuse decisions are handled at the
-    application or data-management level.
+    Any classification or validation logic is handled at the
+    application or service layer.
 
     """
 
@@ -33,7 +34,9 @@ class TVType(TimestampMixin, SQLModel, table=True):
     name: str = Field(
         ...,
         nullable=False,
-        index=True
+        unique=True,
+        min_length=1,
+        max_length=100
         )
 
     description: Optional[str] = Field(

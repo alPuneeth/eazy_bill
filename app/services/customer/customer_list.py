@@ -8,7 +8,7 @@ from app.models.lookup.package import Package
 from app.models.bill.bill import Bill
 from app.models.lookup.status import Status
 from app.models.devices.device_info import DeviceInfo
-from app.models.core_models.user import User
+from app.models.core_models.user import User, UserRole
 
 
 def build_customer_list_query(
@@ -56,7 +56,7 @@ def build_customer_list_query(
     )
 
     # # 🔐 authorization rule - RBAC
-    if current_user.role == "admin":
+    if current_user.role == UserRole.ADMIN:
         pass
     else:
         stmt = stmt.where(Village.agent_id == current_user.id)

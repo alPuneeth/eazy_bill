@@ -2,16 +2,18 @@ from pydantic import BaseModel, Field, StringConstraints
 from typing import Optional, Annotated
 from datetime import datetime
 
-EmptyStr = Annotated[
+NameStr = Annotated[
     str,
     StringConstraints(
+        min_length=1,
+        to_lower=True,
         strip_whitespace=True,
         max_length=100
     )]
 
 
 class FTTH64Create(BaseModel):
-    name: EmptyStr = Field(
+    name: NameStr = Field(
         title="FTTH64",
         description="Identifier representing an FTTH 64-port"
         "configuration type used for network provisioning."
@@ -34,7 +36,7 @@ class FTTH64Read(BaseModel):
 
 
 class FTTH64Update(BaseModel):
-    name: Optional[EmptyStr] = Field(default=None
+    name: Optional[NameStr] = Field(default=None
                                         )
     description: Optional[str] = Field(default=None
                                        )

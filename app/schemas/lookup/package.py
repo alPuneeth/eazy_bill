@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from pydantic import BaseModel, StringConstraints, Field
 from typing import Optional, Annotated
 from datetime import datetime
@@ -6,7 +8,9 @@ NameStr = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
-        max_length=100
+        max_length=100,
+        min_length=1,
+        to_lower=True
     )
 ]
 
@@ -24,7 +28,7 @@ class PackageCreate(BaseModel):
         title="Package",
         description="Name of the Package"
     )
-    price: float = Field(
+    price: Decimal = Field(
         gt=0,
         title="Price",
         description="Price of the Package"
@@ -37,7 +41,7 @@ class PackageRead(BaseModel):
 
     id: int
     name: str
-    price: float
+    price: Decimal
     description: Optional[str]
 
     created_at: datetime
@@ -48,7 +52,7 @@ class PackageUpdate(BaseModel):
     name: Optional[NameStr] = Field(
         default=None
         )
-    price: Optional[float] = Field(
+    price: Optional[Decimal] = Field(
         default=None, gt=0
         )
     description: Optional[str] = Field(

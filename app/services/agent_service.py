@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from app.models.core_models.user import User, UserRole
 from app.models.lookup.village import Village
-from app.schemas.village import AssignVillagesResponse, VillageRead
+from app.schemas.lookup.village import AssignVillagesResponse, VillageRead
 
 logger = logging.getLogger(__name__)
 
@@ -242,13 +242,6 @@ def replace_villages_to_agent_service(
                 f"Village replacement diff | remove={len(ids_to_remove)} | add={len(to_add_ids)}"
             )
         
-        # conflict check BEFORE any mutation
-        for v in villages:
-            if v.agent_id is not None and v.agent_id != agent.id:
-                raise HTTPException(
-                        status_code=400,
-                        detail=f"Village {v.id} already assigned to another agent"
-                    )
 
         # 5. unassign 
         for v in current_villages:

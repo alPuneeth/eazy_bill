@@ -2,16 +2,18 @@ from pydantic import BaseModel, Field, StringConstraints
 from typing import Optional, Annotated
 from datetime import datetime
 
-EmptyStr = Annotated[
+NameStr = Annotated[
                 str,
                 StringConstraints(
                     strip_whitespace=True,
-                    max_length=100
+                    max_length=100,
+                    to_lower=True,
+                    min_length=1
                         )]
 
 
 class TVTypeCreate(BaseModel):
-    name: EmptyStr = Field(
+    name: NameStr = Field(
         title="TV Type",
         description="Type of television technology",
 
@@ -39,7 +41,7 @@ class TVTypeRead(BaseModel):
 
 
 class TVTypeUpdate(BaseModel):
-    name: Optional[EmptyStr] = Field(
+    name: Optional[NameStr] = Field(
         default=None
         )
     description: Optional[str] = Field(

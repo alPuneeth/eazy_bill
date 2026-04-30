@@ -3,7 +3,7 @@ from typing import Optional, Annotated
 from datetime import datetime
 
 from app.models.core_models.user import UserRole
-from app.schemas.village import VillageRead
+from app.schemas.lookup.village import VillageRead
 
 StrongPassword = Annotated[
     str,
@@ -97,7 +97,9 @@ class UserCreate(BaseModel):
             not any(not c.isalnum() for c in v)
         ):
             raise ValueError(
-                "Password must include lowercase, uppercase, digit, and special character"
+                "Password must be at least 8 characters long and " \
+                "include at least one lowercase letter, one uppercase letter, " \
+                "one digit, and one special character."
             )
 
         return self 
@@ -139,9 +141,6 @@ class UserUpdate(BaseModel):
     @model_validator(mode="after")
     def validate_user_code_update(self):
         if self.user_code is not None:
-            if not self.user_code:  
-                raise ValueError("user_code cannot be empty")
-
             code = self.user_code.upper()
 
             if code in RESERVED_USER_CODES:

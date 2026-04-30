@@ -52,7 +52,7 @@ class Customer(TimestampMixin, SQLModel, table=True):
         ...,
         nullable=False,
         unique=True,
-        max_length=15
+        max_length=10
         )
 
     alternate_number: Optional[str] = Field(

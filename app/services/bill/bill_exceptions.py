@@ -30,7 +30,7 @@ class EmptyUpdateError(BillError):
     pass
 
 
-class OverlappinBillingPeriod(BillError):
+class OverlappingBillingPeriod(BillError):
     pass
 
 

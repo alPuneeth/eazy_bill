@@ -1,7 +1,9 @@
 # standard library
+from decimal import Decimal
 from typing import Optional
 
 # third-party
+from sqlalchemy import Column, Numeric
 from sqlmodel import SQLModel, Field
 
 # local module
@@ -29,15 +31,14 @@ class Package(TimestampMixin, SQLModel, table=True):
 
     name: str = Field(
         ...,
+        min_length=1,
         nullable=False,
-        unique=True,
-        index=True
+        unique=True
         )
 
-    price: float = Field(
+    price: Decimal = Field(
         ...,
-        nullable=False,
-        index=True
+        sa_column=Column(Numeric(10, 2), nullable=False)
         )
 
     description: Optional[str] = Field(

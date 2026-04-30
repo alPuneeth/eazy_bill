@@ -11,7 +11,7 @@ from app.schemas.common import IdValueRead, CreatorSummary
 
 from app.services.bill.bill_exceptions import (
     BillConflictError,
-    OverlappinBillingPeriod,
+    OverlappingBillingPeriod,
     CustomerNotFoundError,
     InvalidPackageError
 )
@@ -69,7 +69,7 @@ def create_bll(
     )
 
     try:
-        with session.begin():
+        with session.begin_nested():
 
             session.exec(
                 select(Customer)
@@ -87,7 +87,7 @@ def create_bll(
             ).first()
 
             if existing_overlap:
-                raise OverlappinBillingPeriod()
+                raise OverlappingBillingPeriod()
              
             session.add(bill)
             session.flush()
@@ -107,6 +107,8 @@ def create_bll(
 
     except IntegrityError:
         raise BillConflictError()
+    
+    session.refresh(bill)
 
     # 8. Map response
     return BillRead(

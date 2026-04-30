@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from pydantic import (BaseModel, Field, StringConstraints,
                       field_validator, PydanticUserError
                       )
@@ -28,7 +30,7 @@ PhoneStr = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
-        max_length=15
+        max_length=10
     )
 ]
 
@@ -58,6 +60,7 @@ VCStr = Annotated[
 TVNameStr = Annotated[
     str,
     StringConstraints(strip_whitespace=True,
+                      min_length=1,
                       max_length=100
                       )
 ]
@@ -159,15 +162,11 @@ class CustomerOnboardCreate(BaseModel):
         title="TVType"
         )
 
-    status_id: int = Field(
-        ...,
-        title="Status"
-        )
-
 
 class CustomerListRead(BaseModel):
     model_config = {
-        "from_attributes": True
+        "from_attributes": True,
+        "json_encoders": {Decimal: float}
         }
 
     public_id: str
@@ -175,14 +174,15 @@ class CustomerListRead(BaseModel):
     phone: str
     vc_number: str
     status: str
-    monthly_rate: int
+    monthly_rate: Decimal = Field(max_digits=10, decimal_places=2)
     expiry_date: Optional[datetime]
     village: str
 
 
 class CustomerOnboardRead(BaseModel):
     model_config = {
-        "from_attributes": True
+        "from_attributes": True,
+        "json_encoders": {Decimal: float}
         }
     # ---------- Customer ----------
     public_id: str
@@ -211,7 +211,7 @@ class CustomerOnboardRead(BaseModel):
 
     # ---------- CurrentPackage ----------
     package: IdValueRead
-    monthly_rate: float
+    monthly_rate: Decimal = Field(max_digits=10, decimal_places=2)
 
     # ---------- Latest Bill (FULL OBJECT) ----------
     latest_bill: Optional[BillRead] = None
@@ -252,4 +252,4 @@ class CustomerOnboardUpdate(BaseModel):
     previous_vc_number: Optional[VCStr] = None
     tv_name: Optional[str] = None
     tvtype_id: Optional[int] = None
-    status_id: Optional[int] = None
+

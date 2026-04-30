@@ -17,7 +17,7 @@ from app.services.bill.bill_exceptions import (
     BillNotFoundError,
     BillUpdateNotAllowedError,
     EmptyUpdateError,
-    OverlappinBillingPeriod
+    OverlappingBillingPeriod
 )
 from app.services.customer.enforce_customer_vis import enforce_customer_visibility
 from app.services.device_status import sync_device_status_from_bills

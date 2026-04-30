@@ -15,7 +15,7 @@ from app.models.lookup.village import Village
 from app.models.lookup.customer_type import CustomerType
 from app.models.lookup.ftth64 import FTTH64
 from app.models.lookup.tv_type import TVType
-from app.models.lookup.status import Status, StatusEnum
+from app.models.lookup.status import Status
 from app.models.lookup.package import Package
 from app.models.bill.bill import Bill
 from app.schemas.bill import BillRead
@@ -166,23 +166,31 @@ def patch_customer_onboard(
 
     data = payload.model_dump(exclude_unset=True)
 
+    if "package_id" in data:
+        if not session.get(Package, data["package_id"]):
+            raise ValueError("Invalid package")
+
+    if "village_id" in data:
+        if not session.get(Village, data["village_id"]):
+            raise ValueError("Invalid village")
+
     # ---- status control ----
-    if "status_id" in data:
-        new_status = session.get(Status, data["status_id"])
-        if not new_status:
-            raise ValueError("Invalid status")
+    # if "status_id" in data:
+    #     new_status = session.get(Status, data["status_id"])
+    #     if not new_status:
+    #         raise ValueError("Invalid status")
 
-        current_status = session.get(Status, device.status_id)
+    #     current_status = session.get(Status, device.status_id)
 
-        # Only allow ARCHIVED or restore from ARCHIVED
-        if new_status.name == StatusEnum.ARCHIVED:
-            pass  # allowed (opt-out)
+    #     # Only allow ARCHIVED or restore from ARCHIVED
+    #     if new_status.name == StatusEnum.ARCHIVED:
+    #         pass  # allowed (opt-out)
 
-        elif current_status.name == StatusEnum.ARCHIVED and new_status.name == StatusEnum.INACTIVE:
-            pass  # allowed restore
+    #     elif current_status.name == StatusEnum.ARCHIVED and new_status.name == StatusEnum.INACTIVE:
+    #         pass  # allowed restore
 
-        else:
-            raise ValueError("Customer cannot be activated without a valid bill")
+    #     else:
+    #         raise ValueError("Customer cannot be activated without a valid bill")
 
     if "tvtype_id" in data and data["tvtype_id"] is not None:
         tvtype = session.get(TVType, data["tvtype_id"])
@@ -204,7 +212,7 @@ def patch_customer_onboard(
         if k in {
             "account_number", "stb_id", "vc_number",
             "previous_vc_number", "tv_name",
-            "tvtype_id", "status_id"
+            "tvtype_id"
         }
     }
 

@@ -6,7 +6,6 @@ from sqlmodel import SQLModel, Field, Relationship
 
 # Local application
 from app.models.utilities import TimestampMixin
-# from app.models.core_models.user import User
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -37,8 +36,8 @@ class Village(TimestampMixin, SQLModel, table=True):
     name: str = Field(
         ...,
         unique=True,
-        index=True,
         nullable=False,
+        min_length=1,
         max_length=100
         )
 
@@ -47,6 +46,7 @@ class Village(TimestampMixin, SQLModel, table=True):
         ...,
         index=True,
         nullable=False,
+        min_length=1,
         max_length=6
         )
 
@@ -54,8 +54,8 @@ class Village(TimestampMixin, SQLModel, table=True):
     village_code: str = Field(
         ...,
         unique=True,
-        index=True,
-        max_length=100,
+        min_length=1,
+        max_length=10,
         nullable=False
         )
 

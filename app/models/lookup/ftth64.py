@@ -30,8 +30,9 @@ class FTTH64(TimestampMixin, SQLModel, table=True):
 
     name: str = Field(
         ...,
+        min_length=1,
         nullable=False,
-        index=True,
+        unique=True,
         max_length=150
     )
 

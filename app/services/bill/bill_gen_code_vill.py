@@ -1,4 +1,4 @@
-from sqlmodel import select, Session
+from sqlmodel import Session
 
 from app.models.core_models.user import User, UserRole
 from app.services.bill_service import generate_bill_code
