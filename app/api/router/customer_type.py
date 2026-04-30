@@ -3,6 +3,7 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 
+from app.dependencies.auth import get_current_user
 from app.dependencies.rbac import require_admin
 from app.db.session import get_session
 from app.models.lookup.customer_type import CustomerType
@@ -14,7 +15,8 @@ from app.schemas.lookup.customer_type import (
 
 router = APIRouter(
     prefix="/customer_type",
-    tags=["CustomerType"]
+    tags=["CustomerType"],
+    dependencies=[Depends(get_current_user)]
     )
 
 

@@ -182,8 +182,7 @@ def update_device_info(
         session.rollback()
         raise HTTPException(
                             status_code=409,
-                            detail="Invalid reference or duplicate"
-                                   "device_info data"
+                            detail="Invalid reference or duplicate device_info data"
                             )
 
     session.refresh(device_info)

@@ -10,7 +10,7 @@ from app.db.session import get_session
 from app.models.core_models.user import User
 from app.dependencies.auth import get_current_user
 from app.models.lookup.village import Village
-from app.schemas.village import (
+from app.schemas.lookup.village import (
     VillageCreate,
     VillageRead,
     VillageUpdate
@@ -18,7 +18,8 @@ from app.schemas.village import (
 
 router = APIRouter(
     prefix="/village",
-    tags=["Village"]
+    tags=["Village"],
+    dependencies=[Depends(get_current_user)]
     )
 
 
@@ -113,7 +114,15 @@ def update_village(
     for key, value in update_data.items():
         setattr(village, key, value)
 
-    session.commit()
+    try:
+        session.commit()
+    
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="Village with this name already exists"
+        )
      # 🔑 reload again (important after update)
     village = session.exec(
         select(Village)

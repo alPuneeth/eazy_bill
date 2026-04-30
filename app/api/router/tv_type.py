@@ -3,6 +3,7 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 
+from app.dependencies.auth import get_current_user
 from app.dependencies.rbac import require_admin
 from app.db.session import get_session
 from app.models.lookup.tv_type import TVType
@@ -14,7 +15,8 @@ from app.schemas.lookup.tv_type import (
 
 router = APIRouter(
     prefix="/tv_type",
-    tags=["TVType"]
+    tags=["TVType"],
+    dependencies=[Depends(get_current_user)]
     )
 
 
@@ -43,6 +45,16 @@ def create_tv_type(
     payload: TVTypeCreate,
     session: Session = Depends(get_session)
                         ):
+    existing_tv_types = session.exec(
+        select(TVType).where(TVType.name == payload.name)
+    ).first()
+
+    if existing_tv_types:
+        raise HTTPException(
+            status_code=409,
+            detail="TV type already exists"
+        )
+    
     tv_type = TVType.model_validate(payload)
     session.add(tv_type)
 
@@ -72,6 +84,20 @@ def update_tv_type(
         raise HTTPException(status_code=404, detail="TVType not found")
 
     update_data = payload.model_dump(exclude_unset=True)
+
+    if "name" in update_data:
+        existing_tv_types = session.exec(
+            select(TVType).where(TVType.name == update_data["name"],
+                                 TVType.id != tv_type_id
+                                 )
+        ).first()
+
+        if existing_tv_types:
+            raise HTTPException(
+                status_code=409,
+                detail="TVType with this name already exists"
+            )
+
     for key, value in update_data.items():
         setattr(tv_type, key, value)
 

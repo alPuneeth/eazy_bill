@@ -4,7 +4,7 @@ from sqlmodel import Session
 
 from app.dependencies.rbac import require_admin
 from app.db.session import get_session
-from app.schemas.village import AssignVillagesResponse, VillageRead, AssignVillagesRequest, ReplaceVillagesRequest
+from app.schemas.lookup.village import AssignVillagesResponse, VillageRead, AssignVillagesRequest, ReplaceVillagesRequest
 from app.services.agent_service import assign_villages_to_agent_service, replace_villages_to_agent_service
 
 logger = logging.getLogger(__name__)
