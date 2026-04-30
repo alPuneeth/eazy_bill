@@ -18,7 +18,7 @@ A production-grade REST API backend for a cable operator's billing and customer 
 ## Architecture
 ```
 app/
-├── api/          # Route layer (entry points)
+├── api/          # Route layer (HTTP layer)
 ├── auth/         # JWT token handling
 ├── core/         # Config, exceptions, security
 ├── db/           # Session management and DB initialization
@@ -36,18 +36,20 @@ Request → Router → Service → Database
           Auth + RBAC (Depends)
 ```
 
-- Routers handle request/response
-- Services encapsulate business logic
-- Dependencies enforce authentication and authorization
-- Models and Schemas separate persistence from validation
+- Routers → I/O handling  
+- Services → business rules + transactions  
+- Dependencies → authentication + authorization  
+- Models/Schemas → persistence vs validation separation  
 
 ---
 
 ## Features
 
 - Customer onboarding (single and bulk)
-- Bill generation with validation rules
-- Same-day bill edit restriction
+- Billing system with **strict overlap prevention**
+- Same-day bill update restriction
+- Device lifecycle driven by billing:
+     ACTIVE ⇔ valid bill exists
 - Package-based pricing model
 - Agent-based access restriction
 - Role-based access control (admin / agent)
@@ -57,6 +59,16 @@ Request → Router → Service → Database
      - Collection reports
      - Customer status insights
 - UUID-based external identifiers (secure public APIs)
+
+---
+
+## Data Integrity & Design Highlights
+
+- **Transactional safety** using `session.begin()` (no partial writes)
+- **Concurrency control** via row-level locking (`FOR UPDATE`)
+- **Billing overlap protection** (app-level validation + race-safe design)
+- **Derived device state** (never manually activated)
+- **Service-layer architecture** for testability and separation of concerns
 
 ---
 
