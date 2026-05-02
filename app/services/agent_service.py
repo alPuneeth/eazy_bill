@@ -76,9 +76,6 @@ def assign_villages_to_agent_service(
                 status_code=404,
                 detail=f"Villages not found: {list(missing_ids)}"
             )
-
-        if not villages:
-            raise HTTPException(404, "No villages found")
         
         already_assigned_ids = []
 
