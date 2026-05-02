@@ -1,6 +1,6 @@
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
-from datetime import date
+from datetime import date, datetime, timezone
 
 from app.models.bill.bill import Bill
 from app.models.core_models.customer import Customer
@@ -56,7 +56,7 @@ def update_bll(
 
     # 3. Business rule: same-day update only
 
-    if bill.created_at.date() != date.today():
+    if bill.bill_date.date() != date.today():
         raise BillUpdateNotAllowedError()
 
     # 4. Extract update payload
@@ -71,7 +71,7 @@ def update_bll(
             raise InvalidPackageError()
     
     try:
-        with session.begin(): 
+        with session.begin_nested(): 
             # lock customer (same as create)
             session.exec(
                 select(Customer)
@@ -93,7 +93,7 @@ def update_bll(
             ).first()
 
             if existing_overlap:
-                raise OverlappinBillingPeriod()
+                raise OverlappingBillingPeriod()
             
             # mutation
             for key, value in update_data.items():
@@ -120,6 +120,8 @@ def update_bll(
     except IntegrityError:
         raise BillConflictError()
     
+    session.commit()
+
     package = session.get(Package, bill.package_id)
 
     creator = session.get(User, bill.created_by_id)

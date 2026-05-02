@@ -1,7 +1,7 @@
 from sqlmodel import Session
 
 from app.models.core_models.user import User, UserRole
-from app.services.bill_service import generate_bill_code
+from app.services.bill.bill_service import generate_bill_code
 from app.services.bill.bill_fetch_vill import get_village_by_code_or_fail
 from app.services.exceptions import VillageAccessDeniedError
 

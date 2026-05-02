@@ -108,6 +108,7 @@ def create_bll(
     except IntegrityError:
         raise BillConflictError()
     
+    session.commit()
     session.refresh(bill)
 
     # 8. Map response
