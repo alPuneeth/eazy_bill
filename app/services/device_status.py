@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime, timezone
 from sqlmodel import Session, select
 from app.models.bill.bill import Bill
 from app.models.devices.device_info import DeviceInfo
@@ -14,7 +14,7 @@ def sync_device_status_from_bills(
     """
     Updates ALL devices of a customer based on bill period.
     """
-    today = date.today()
+    today = datetime.now(timezone.utc)
 
     has_active_bill = session.exec(
         select(Bill.id)

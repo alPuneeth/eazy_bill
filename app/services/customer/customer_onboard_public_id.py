@@ -73,12 +73,12 @@ def build_customer_onboard_read(customer_public_id: str, session: Session, curre
     enforce_customer_visibility(customer, current_user, session)
 
     # -------- Fetch latest bill (explicit & safe) --------
-    bill_row = session.execute(
+    bill_row = session.exec(
         select(Bill, Package, User)
         .join(Package, Package.id == Bill.package_id)
         .join(User, User.id == Bill.created_by_id)
         .where(Bill.customer_id == customer.id)
-        .order_by(Bill.created_at.desc())
+        .order_by(Bill.id.desc())
         .limit(1)
     ).first()
 
@@ -173,24 +173,6 @@ def patch_customer_onboard(
     if "village_id" in data:
         if not session.get(Village, data["village_id"]):
             raise ValueError("Invalid village")
-
-    # ---- status control ----
-    # if "status_id" in data:
-    #     new_status = session.get(Status, data["status_id"])
-    #     if not new_status:
-    #         raise ValueError("Invalid status")
-
-    #     current_status = session.get(Status, device.status_id)
-
-    #     # Only allow ARCHIVED or restore from ARCHIVED
-    #     if new_status.name == StatusEnum.ARCHIVED:
-    #         pass  # allowed (opt-out)
-
-    #     elif current_status.name == StatusEnum.ARCHIVED and new_status.name == StatusEnum.INACTIVE:
-    #         pass  # allowed restore
-
-    #     else:
-    #         raise ValueError("Customer cannot be activated without a valid bill")
 
     if "tvtype_id" in data and data["tvtype_id"] is not None:
         tvtype = session.get(TVType, data["tvtype_id"])
