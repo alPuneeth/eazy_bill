@@ -9,7 +9,6 @@ from sqlalchemy import Enum as SAEnum, Column, String
 
 # local module
 from app.models.utilities import TimestampMixin, generate_uuid
-# from app.models.lookup.village import Village
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -93,7 +92,6 @@ class User(TimestampMixin, SQLModel, table=True):
     ))
 
     # Timestamp of the user's last successful login
-    # remember to manually refresh before committing to DB
     last_login_at: Optional[datetime] = Field(
         default=None,
         nullable=True

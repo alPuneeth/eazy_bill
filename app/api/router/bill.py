@@ -22,7 +22,7 @@ from app.services.bill.bills_list import build_bill_list_query
 from app.services.bill.bill_mapper import map_bill_row
 from app.services.bill.bill_exceptions import (
     BillNotFoundError,
-    OverlappinBillingPeriod,
+    OverlappingBillingPeriod,
     VillageNotFoundError,
     CustomerNotFoundError,
     InvalidPackageError,
@@ -189,7 +189,7 @@ def create_bill(
             detail="Duplicate bill_code or invalid bill"
         )
     
-    except OverlappinBillingPeriod:
+    except OverlappingBillingPeriod:
         raise HTTPException(
             status_code=409,
             detail="Billing period conflict: Please select a non-overlapping timeframe."
@@ -243,7 +243,7 @@ def update_bill(
     except BillUpdateNotAllowedError:
         raise HTTPException(
             400,
-            "Bills cannot be modified after the day of creation"
+            "Bills can only be modified on the bill date"
         )
 
     except EmptyUpdateError:
