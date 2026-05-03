@@ -81,7 +81,7 @@ def test_login_inactive_user(client, session):
     - Proper error message
     - last_login_at is NOT updated
     """
-    password = "secret123"
+    password = "Secret@123"
 
     user = create_user(session, is_active=False)
     user.hashed_password = get_password_hash(password)

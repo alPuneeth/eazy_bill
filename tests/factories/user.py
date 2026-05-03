@@ -54,14 +54,13 @@ def create_user(
                 
                 session.add(user) # staged in memory
 
-            
                 session.flush() # assigns PK without final commit 
                 return user
-        
+            
         except IntegrityError: 
-            if user_code:
-                raise  # explicit failure if user passed invalid code
-            continue # retry safely
+                if user_code:
+                    raise  # explicit failure if user passed invalid code
+                continue # retry safely
     
     raise RuntimeError("Failed to generate unique user_code")
 
