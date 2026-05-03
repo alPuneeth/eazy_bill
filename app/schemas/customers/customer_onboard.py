@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from pydantic import (BaseModel, Field, StringConstraints,
+from pydantic import (BaseModel, Field, StringConstraints, field_serializer,
                       field_validator, PydanticUserError
                       )
 from typing import Optional, Annotated
@@ -165,8 +165,7 @@ class CustomerOnboardCreate(BaseModel):
 
 class CustomerListRead(BaseModel):
     model_config = {
-        "from_attributes": True,
-        "json_encoders": {Decimal: float}
+        "from_attributes": True
         }
 
     public_id: str
@@ -174,15 +173,17 @@ class CustomerListRead(BaseModel):
     phone: str
     vc_number: str
     status: str
-    monthly_rate: Decimal = Field(max_digits=10, decimal_places=2)
+    monthly_rate: Decimal
+    @field_serializer("monthly_rate")
+    def serialize_monthly_rate(self, value: Decimal) -> float:
+        return float(value)
     expiry_date: Optional[datetime]
     village: str
 
 
 class CustomerOnboardRead(BaseModel):
     model_config = {
-        "from_attributes": True,
-        "json_encoders": {Decimal: float}
+        "from_attributes": True
         }
     # ---------- Customer ----------
     public_id: str
@@ -211,7 +212,10 @@ class CustomerOnboardRead(BaseModel):
 
     # ---------- CurrentPackage ----------
     package: IdValueRead
-    monthly_rate: Decimal = Field(max_digits=10, decimal_places=2)
+    monthly_rate: Decimal
+    @field_serializer("monthly_rate")
+    def serialize_monthly_rate(self, value: Decimal) -> float:
+        return float(value)
 
     # ---------- Latest Bill (FULL OBJECT) ----------
     latest_bill: Optional[BillRead] = None

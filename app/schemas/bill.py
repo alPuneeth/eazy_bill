@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, model_validator, StringConstraints, ConfigDict
+from pydantic import BaseModel, Field, field_serializer, model_validator, StringConstraints, ConfigDict
 from typing import Optional, Annotated
 from datetime import datetime
 from decimal import Decimal
@@ -65,6 +65,9 @@ class BillRead(BaseModel):
     end_date: datetime
     monthly_count: int
     bill_amount: Decimal = Field(examples=[3400, 9332])
+    @field_serializer("bill_amount")
+    def serialize_bill_amount(self, value: Decimal) -> float:
+        return float(value)
 
     customer_public_id: str
 

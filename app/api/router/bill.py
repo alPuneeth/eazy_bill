@@ -158,12 +158,6 @@ def create_bill(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Thin router:
-    - No DB logic
-    - No business rules
-    - Only exception translation
-    """
     try:
         return create_bll(
             payload=payload,
@@ -209,11 +203,6 @@ def update_bill(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Thin router:
-    - Delegates to service
-    - Maps domain errors -> HTTP
-    """
     try:
         return update_bll(
             bill_public_id=bill_public_id,
@@ -226,6 +215,12 @@ def update_bill(
         raise HTTPException(
             status_code=404,
             detail="Bill not found"
+        )
+    
+    except OverlappingBillingPeriod:
+        raise HTTPException(
+            status_code=409,
+            detail="Billing period conflict: Please select a non-overlapping timeframe."
         )
     
     except CustomerNotFoundError:
