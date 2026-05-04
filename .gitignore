@@ -6,3 +6,4 @@ venv/
 .DS_Store
 *.log 
 read_me_dev.txt
+.coverage
