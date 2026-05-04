@@ -5,7 +5,7 @@ from datetime import datetime
 
 # third-party
 from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import Enum as SAEnum, Column, String
+from sqlalchemy import DateTime, Enum as SAEnum, Column, String
 
 # local module
 from app.models.utilities import TimestampMixin, generate_uuid
@@ -94,7 +94,7 @@ class User(TimestampMixin, SQLModel, table=True):
     # Timestamp of the user's last successful login
     last_login_at: Optional[datetime] = Field(
         default=None,
-        nullable=True
+        sa_column=Column(DateTime(timezone=True), nullable=True)
         )
 
     villages: list["Village"]=Relationship(back_populates="agent")

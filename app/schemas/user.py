@@ -111,14 +111,16 @@ class UserRead(BaseModel):
     id: int
     public_id: str
 
+    user_code: UserCodeStr  # since we fetch from db where the field is non null setting it optional here is incorrect
     name: str
     phone: str
+
     role: UserRole
     is_active: bool
-    user_code: UserCodeStr  # since we fetch from db where the field is non null setting it optional here is incorrect
-    villages: list[VillageRead] = Field(default_factory=list)   # Villages assigned to an Agent
-    last_login_at: Optional[datetime] = None
 
+    villages: list[VillageRead] = Field(default_factory=list)   # Villages assigned to an Agent
+
+    last_login_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
 
