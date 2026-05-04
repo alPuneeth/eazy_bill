@@ -5,7 +5,9 @@ DATABASE_URL = settings.database_url
 
 engine = create_engine(
     DATABASE_URL,
-    echo=settings.debug
+    echo=settings.debug,
+    pool_pre_ping=True,
+    pool_recycle=300
 )
 
 
