@@ -1,0 +1,26 @@
+-r requirements.txt
+argcomplete==3.6.3
+colorama==0.4.6
+coverage==7.13.5
+flake8==7.3.0
+iniconfig==2.3.0
+isort==8.0.1
+markdown-it-py==4.0.0
+mccabe==0.7.0
+mdurl==0.1.2
+mypy==1.18.2
+mypy_extensions==1.1.0
+pathspec==0.12.1
+pipx==1.8.0
+platformdirs==4.5.0
+pluggy==1.6.0
+pycodestyle==2.14.0
+pyflakes==3.4.0
+Pygments==2.19.2
+pytest==9.0.3
+pytest-cov==7.1.0
+rich==14.2.0
+rich-toolkit==0.16.0
+rignore==0.7.6
+shellingham==1.5.4
+userpath==1.9.2

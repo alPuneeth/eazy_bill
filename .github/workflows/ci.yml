@@ -1,0 +1,44 @@
+name: EazyBill CI
+
+# Trigger: run this pipeline on every push to main branch
+# and on every pull request targetting main
+on:
+  push:
+    branches: [main]
+  pull_requests:
+    branches: [main]
+
+
+jobs:
+  test:
+    # GitHub spins up a fresh Ubuntu machine for this job
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1 - checkout your code onto the Ubuntu machine
+      - name: checkout code
+        uses: actions/checkout@v4
+
+      # Step 2 - start test_db container
+      # GitHub Actions has Docker pre-installed
+      # We only need test_db - not the full stack
+      - name: Start test_db
+        run: |
+          docker compose up -d test_db
+          # wait for test_db to be healthy before proceeding
+          docker compose up -d --wait test_db
+
+      # Step 3 - build the test stage image
+      - name: Build test image
+        run: docker compose build test
+      
+      # Step 4 — run pytest inside the test container
+      # --rm removes the container after tests complete
+      - name: Run tests
+        run: docker compose run --rm test
+
+      # Step 5 — always stop containers after job finishes
+      # runs even if tests fail
+      - name: Stop containers
+        if: always()
+        run: docker compose down

@@ -9,3 +9,4 @@ read_me_dev.txt
 .coverage
 .postman/
 postman/
+.env.docker

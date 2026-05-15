@@ -1,0 +1,12 @@
+venv/
+.git/
+__pycache__/
+*.pyc
+*.pyo
+.coverage
+htmlcov/
+.env
+.pytest_cache/
+*.egg-info/
+alembic/__pycache__/
+.env.docker
