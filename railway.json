@@ -1,0 +1,10 @@
+{
+    "build": {
+        "builder": "DOCKERFILE",
+        "dockerfilePath": "Dockerfile",
+        "buildTarget": "final"
+    },
+    "deploy": {
+        "startCommand": "bash start.sh"
+    }
+}
