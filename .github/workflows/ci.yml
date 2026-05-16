@@ -1,4 +1,4 @@
-name: EazyBill CI
+name: EazyBill CI/CD
 
 # Trigger: run this pipeline on every push to main branch
 # and on every pull request targetting main
@@ -14,9 +14,18 @@ jobs:
     # GitHub spins up a fresh Ubuntu machine for this job
     runs-on: ubuntu-latest
 
+    env:
+      APP_NAME: EazyBill
+      DEBUG: "False"
+      DATABASE_URL: postgresql+psycopg://puneeth:hope3@db:5432/eazy_bill
+      TEST_DATABASE_URL: postgresql+psycopg://puneeth:hope3@test_db:5432/test_db
+      SECRET_KEY: dc10b21a55ba27ebc4cb6db3ec52ebf51791dd7b879fe3c7331c22d46992e6e1
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+
     steps:
       # Step 1 - checkout your code onto the Ubuntu machine
-      - name: checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
       # Step 2 - start test_db container
@@ -42,3 +51,21 @@ jobs:
       - name: Stop containers
         if: always()
         run: docker compose down
+
+  deploy:
+    # only runs if test job passes
+    # only runs on push to main - not on pull requests
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Railway
+        run: |
+          curl -X POST \
+            "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "query": "mutation { serviceInstanceRedeploy(serviceId: \"${{ secrets.RAILWAY_SERVICE_ID }}\") }"
+            }'
