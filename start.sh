@@ -2,6 +2,9 @@
 
 set -e
 
+export DATABASE_URL="${DATABASE_URL/postgresql:\/\//postgresql+psycopg://}"
+export TEST_DATABASE_URL="${TEST_DATABASE_URL/postgresql:\/\//postgresql+psycopg://}"
+
 echo "Running migrations..."
 alembic upgrade head
 
