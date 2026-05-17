@@ -69,13 +69,13 @@ services:
       - path: .env.docker
         required: false
     environment:
-      DATABASE_URL: postgresql+psycopg://puneeth:hope3@db:5432/eazy_bill
-      TEST_DATABASE_URL: postgresql+psycopg://puneeth:hope3@test_db:5432/test_db
-      SECRET_KEY: dc10b21a55ba27ebc4cb6db3ec52ebf51791dd7b879fe3c7331c22d46992e6e1
-      APP_NAME: EazyBill
-      DEBUG: "False"
-      ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      - DATABASE_URL
+      - TEST_DATABASE_URL
+      - SECRET_KEY
+      - APP_NAME
+      - DEBUG
+      - ALGORITHM
+      - ACCESS_TOKEN_EXPIRE_MINUTES
     depends_on:
       test_db:
         condition: service_healthy
