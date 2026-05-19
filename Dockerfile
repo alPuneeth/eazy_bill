@@ -41,7 +41,10 @@ WORKDIR /app
 COPY --from=builder /install /usr/local
 
 # Copy application code
-COPY . .
+COPY app/ app/
+COPY alembic/ alembic/
+COPY alembic.ini .
+COPY start.sh .
 
 # Make start.sh(start up script) executable inside the image
 RUN chmod +x start.sh
