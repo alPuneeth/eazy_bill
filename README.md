@@ -1,150 +1,178 @@
 # EazyBill
 
-A production-grade REST API backend for a cable operator's billing and customer management system. Handles customer onboarding, billing, agent operations, collections, and reporting. Designed and implemented end-to-end using FastAPI, SQLModel, and PostgreSQL.
+![Python](https://img.shields.io/badge/Python-3.13-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green)
+![Docker](https://img.shields.io/badge/Docker-Containerized-blue)
+![Tests](https://img.shields.io/badge/Tests-41-success)
+![Coverage](https://img.shields.io/badge/Coverage-73%25-yellow)
+
+A containerized REST API backend for a cable operator's billing and customer management system. Built to model realistic operational constraints — billing consistency, concurrency safety, role-based access, and automated deployment.
+
+Repository: https://github.com/alPuneeth/eazy_bill
+Live deployment available on request.
 
 ---
 
 ## Tech Stack
 
-- **Framework:** FastAPI
-- **ORM:** SQLModel + SQLAlchemy
-- **Database:** PostgreSQL
-- **Migrations:** Alembic
-- **Auth:** JWT (python-jose) + RBAC
-- **Language:** Python 3.10+
+| Layer          | Technology                        |
+| -------------- | --------------------------------- |
+| Framework      | FastAPI                           |
+| ORM            | SQLModel + SQLAlchemy             |
+| Database       | PostgreSQL                        |
+| Migrations     | Alembic                           |
+| Auth           | JWT (`python-jose`) + RBAC        |
+| Language       | Python 3.13                       |
+| Containerization | Docker (multi-stage builds)     |
+| CI/CD          | GitHub Actions                    |
+| Deployment     | Railway                           |
+| Testing        | Pytest                            |
+
+---
+
+## Key Backend Concepts
+
+- Transaction management (`session.begin()` — no partial writes)
+- Row-level locking (`SELECT FOR UPDATE` — race-safe billing)
+- Device state derived from billing validity (`ACTIVE ⇔ valid bill exists`)
+- Service-layer architecture (thin routers, testable business logic)
+- RBAC enforced at dependency and service layers
+- Multi-stage Docker builds (build tools and test code excluded from production image)
+- Containerized CI pipeline (identical environment across local, CI, and production)
+- Automated containerized deployment via Railway
 
 ---
 
 ## Architecture
-```
+
+```text
 app/
-├── api/          # Route layer (HTTP layer)
-├── auth/         # JWT token handling
-├── core/         # Config, exceptions, security
-├── db/           # Session management and DB initialization
-├── dependencies/ # Auth and RBAC enforcement (FastAPI Depends)
+├── api/          # HTTP route layer
+├── auth/         # JWT creation and validation
+├── core/         # Config, security, exception handling
+├── db/           # Session management
+├── dependencies/ # Auth + RBAC (FastAPI Depends)
 ├── models/       # SQLModel ORM models
 ├── schemas/      # Request/response validation (Pydantic)
-├── services/     # Business logic layer(customer, billing, reports, devices)
-└── main.py       # Application entry point
+├── services/     # Business logic layer
+└── main.py       # Entry point
 ```
 
-### Request Lifecycle
-```
-Request → Router → Service → Database
-               ↑
-          Auth + RBAC (Depends)
-```
-
-- Routers → I/O handling  
-- Services → business rules + transactions  
-- Dependencies → authentication + authorization  
-- Models/Schemas → persistence vs validation separation  
+**Request flow:** Router → Dependency (Auth + RBAC) → Service → Database
 
 ---
 
 ## Features
 
 - Customer onboarding (single and bulk)
-- Billing system with **strict overlap prevention**
-- Same-day bill update restriction
-- Device lifecycle driven by billing:
-     ACTIVE ⇔ valid bill exists
+- Billing with race-safe overlap prevention and same-day update restriction
+- Device lifecycle driven by billing validity
 - Package-based pricing model
-- Agent-based access restriction
-- Role-based access control (admin / agent)
-- Village-level data isolation
-- Reports:
-     - Billing summaries
-     - Collection reports
-     - Customer status insights
-- UUID-based external identifiers (secure public APIs)
+- Agent-scoped access with village-level data isolation
+- Role-based access control (Admin / Agent)
+- Billing summaries, collection reports, and customer status reports
+- UUID-based public identifiers (enumeration protection)
 
 ---
 
-## Data Integrity & Design Highlights
+## CI/CD Pipeline
 
-- **Transactional safety** using `session.begin()` (no partial writes)
-- **Concurrency control** via row-level locking (`FOR UPDATE`)
-- **Billing overlap protection** (app-level validation + race-safe design)
-- **Derived device state** (never manually activated)
-- **Service-layer architecture** for testability and separation of concerns
-
----
-
-## Local Setup
-
-### Prerequisites
-
-- Python 3.10+
-- PostgreSQL 13+
-- Git
-
-### Installation
-```bash
-# 1. Clone the repository
-git clone https://github.com/alPuneeth/eazy_bill.git
-cd eazy_bill
-
-# 2. Create and activate virtual environment
-python -m venv venv
-venv\Scripts\activate        # Windows
-source venv/bin/activate     # Linux / macOS
-
-# 3. Install dependencies
-pip install -r requirements.txt
-
-# 4. Database Setup 
-# Open PostgreSQL
-psql -U postgres
-
-# Create Database
-CREATE DATABASE eazybill;
-CREATE DATABASE test_db;
-\q
-
-# 5.  Environment Configuration
-# Create a .env file in the project root:
-DATABASE_URL=postgresql+psycopg://postgres:your_password@localhost:5432/eazybill
-SECRET_KEY=your-secret-key
-TEST_DATABASE_URL=postgresql+psycopg://postgres:your_password@localhost:5432/test_db
-
-# 6. Run migrations
-alembic upgrade head
-
-# 7. Start the server (run from project root)
-uvicorn app.main:app --reload
+```text
+git push → GitHub Actions → Run Tests (Docker) → Deploy to Railway
 ```
 
-### API Documentation
+- Tests run inside Docker — identical environment to production
+- Deployment is blocked if any test fails
+- Deployment only triggers on push to `main`, not pull requests
+- `RAILWAY_TOKEN`, `RAILWAY_SERVICE_ID`, and `RAILWAY_PROJECT_ID` stored as GitHub Secrets
 
-- Swagger UI: http://127.0.0.1:8000/docs
-- ReDoc: http://127.0.0.1:8000/redoc
+---
+
+## Docker
+
+Three-stage Dockerfile:
+
+| Stage   | Purpose                                            |
+| ------- | -------------------------------------------------- |
+| builder | Compiles psycopg C extension, installs all deps    |
+| final   | Lean production image — no build tools or test code|
+| test    | Extends final — adds pytest and test dependencies  |
+
+---
+
+## Testing
+
+- **41 endpoint-level integration tests** against an isolated PostgreSQL test database
+- **73% code coverage**
+- Rollback-based test isolation via pytest fixtures
+- Reusable factories for customers, bills, users, and villages
+
+```bash
+# Run tests
+docker compose run --rm test
+
+# Coverage report
+pytest tests/ --cov=app --cov-report=term-missing
+```
 
 ---
 
 ## Authentication & Authorization
 
-- JWT-based authentication
-- Role-based access control
-    - Admin -> full access
-    - Agent -> restricted to assigned data
-- RBAC enforced via FastAPI dependencies and service-layer checks
-- Single-admin constraint enforced at the application level
+- JWT-based authentication with secure password hashing
+- Two roles: **Admin** (full access) and **Agent** (village/customer scope)
+- RBAC enforced at FastAPI dependency layer and service layer
+- Single-admin constraint enforced at application level
 
 ---
 
 ## Design Decisions
 
-- UUIDs over incremental IDs → prevents enumeration attacks
-- Service layer abstraction → keeps routers thin and logic testable
-- Manual Alembic review → avoids unintended schema changes
-- Long-lived JWT tokens → acceptable due to controlled deployment environment
+| Decision                  | Reason                                       |
+| ------------------------- | -------------------------------------------- |
+| UUIDs over sequential IDs | Prevent enumeration attacks on public APIs   |
+| Service layer             | Testability and separation of concerns       |
+| Multi-stage Docker builds | Lean, secure production images               |
+| Manual Alembic review     | Prevent unintended schema changes            |
+| Synchronous endpoints     | Simpler operational model for current scale  |
+| PostgreSQL only           | Workload is moderate and relational          |
+| Long-lived JWTs           | Acceptable in a controlled single-operator environment |
+
+---
+
+## Local Setup
+
+### With Docker
+
+```bash
+git clone https://github.com/alPuneeth/eazy_bill.git
+cd eazy_bill
+cp .env.docker.example .env.docker   # fill in your values
+docker compose up app                 # starts db, runs migrations, starts server
+```
+
+API available at `http://localhost:8000` — docs at `/docs`.
+
+### Without Docker
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure environment — create .env with:
+DATABASE_URL=postgresql+psycopg://postgres:password@localhost:5432/eazy_bill
+TEST_DATABASE_URL=postgresql+psycopg://postgres:password@localhost:5432/test_db
+SECRET_KEY=your-secret-key
+
+# Run migrations and start server
+alembic upgrade head
+uvicorn app.main:app --reload
+```
 
 ---
 
 ## Notes
 
-- `.env`, `venv/` are excluded via `.gitignore`
-- PostgreSQL must be running before applying migrations
-- All schema changes must go through Alembic
+- `.env`, `.env.docker`, and `venv/` are excluded via `.gitignore`
+- All schema changes go through Alembic
+- `postman/` contains API collections for manual testing
