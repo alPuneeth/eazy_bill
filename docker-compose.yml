@@ -40,7 +40,8 @@ services:
     build: .
     restart: unless-stopped
     env_file:
-      - .env.docker
+      - path: .env.docker
+        required: false
     ports:
       - "8000:8000"
     volumes:
@@ -55,7 +56,8 @@ services:
       context: .
       target: test
     env_file:
-      - .env.docker
+      - path: .env.docker
+        required: false
     depends_on:
       test_db:
         condition: service_healthy
