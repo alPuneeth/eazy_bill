@@ -16,7 +16,7 @@ def get_collections_summary(session: Session, current_user: User) -> Collections
         func.coalesce(
             func.sum(
                 case(
-                    (Bill.bill_date == today, Bill.bill_amount),
+                    (func.date(Bill.created_at) == today, Bill.bill_amount),
                     else_=0
                 )
             ),
@@ -27,7 +27,7 @@ def get_collections_summary(session: Session, current_user: User) -> Collections
             func.sum(
                 case(
                     (
-                        func.date_trunc("month", Bill.bill_date)
+                        func.date_trunc("month", Bill.created_at)
                         == func.date_trunc("month", func.current_date()),
                         Bill.bill_amount
                     ),
