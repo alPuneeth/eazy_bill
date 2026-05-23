@@ -14,11 +14,9 @@ from app.models.lookup.village import Village
 from app.services.customer.enforce_customer_vis import enforce_customer_visibility
 from app.models.devices.device_info import DeviceInfo
 from app.schemas.device_info import (
-    DeviceInfoCreate,
     DeviceInfoRead,
     DeviceInfoUpdate
 )
-from app.services.status_ids import get_active_inactive_status_ids
 
 router = APIRouter(
     prefix="/device_info",
@@ -70,56 +68,6 @@ def get_device_info(
     )
 
     return build_deviceinfo_read(device)
-
-
-@router.post("/", response_model=DeviceInfoRead)
-def create_device_info(
-    payload: DeviceInfoCreate,
-    session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user)
-                        ):
-    customer = session.exec(
-            select(Customer)
-            .where(
-                Customer.public_id == payload.customer_public_id
-                )
-    ).first()
-
-    if not customer:
-        raise HTTPException(404, "Customer not found")
-
-    enforce_customer_visibility(
-        customer=customer,
-        current_user=current_user,
-        session=session)
-    
-    active_status_id, _ = get_active_inactive_status_ids(session)
-
-    # Explicit ORM construction (NO model_validate)
-    device_info = DeviceInfo(
-        customer_id=customer.id,
-        account_number=payload.account_number,
-        stb_id=payload.stb_id,
-        vc_number=payload.vc_number,
-        previous_vc_number=payload.previous_vc_number,
-        tv_name=payload.tv_name,
-        tvtype_id=payload.tvtype_id,
-        status_id=active_status_id,
-    )
-
-    session.add(device_info)
-
-    try:
-        session.commit()
-
-    except IntegrityError:
-        session.rollback()
-        raise HTTPException(
-            status_code=409,
-            detail="Invalid reference or duplicate device_info data"
-        )
-    session.refresh(device_info)
-    return build_deviceinfo_read(device_info)
 
 
 @router.patch("/{device_info_public_id}", response_model=DeviceInfoRead)

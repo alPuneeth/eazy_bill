@@ -30,42 +30,6 @@ NameStr = Annotated[
 ]
 
 
-class DeviceInfoCreate(BaseModel):
-    account_number: Optional[AccountNumberStr] = Field(
-        default=None,
-        title="Account Number",
-    )
-    stb_id: Optional[str] = Field(
-        default=None,
-        title="STB id",
-        description="Set Top Box id"
-    )
-    vc_number: VCStr = Field(
-        ...,
-        title="VC number",
-        description="Viewing Card number"
-    )
-    previous_vc_number: Optional[VCStr] = Field(
-        default=None,
-        title="Previous vc number",
-        description="Previous Viewing Card number"
-    )
-    tv_name: Optional[NameStr] = Field(
-        default=None,
-        title="TV name",
-        description="Brand or manufacturer name of the TV"
-    )
-
-    customer_public_id: str  # changed from customer_id: int
-
-    tvtype_id: Optional[int] = Field(
-        default=None,
-        title="TV Type"
-    )
-
-    status_id: int
-
-
 class DeviceInfoRead(BaseModel):
     model_config = {"from_attributes": True}
 
@@ -104,6 +68,4 @@ class DeviceInfoUpdate(BaseModel):
     tvtype_id:  Optional[int] = Field(
         default=None
         )
-    status_id:  Optional[int] = Field(
-        default=None
-        )
+
