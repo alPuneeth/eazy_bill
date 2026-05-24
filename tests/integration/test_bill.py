@@ -321,4 +321,63 @@ def test_create_bill_unauthorized(raw_client):
     assert response.status_code == 401
 
 
+def test_create_bill_for_archived_customer_returns_error(client, session):
+    """
+    Archived customers cannot be billed.
+    Bill creation must return 409 when the customer's device is archived.
+    """
+
+    # --- setup ---
+    village = create_village(session)
+    package = create_package(session)
+    customer_type = create_customer_type(session, CustomerTypeEnum.REGULAR)
+    archived = create_status(session, StatusEnum.ARCHIVED)
+
+
+    ftth64 = FTTH64(name="FTTH-TEST")
+    session.add(ftth64)
+    session.flush()
+
+    customer = create_customer(
+        session,
+        village_id=village.id,
+        customer_type_id=customer_type.id,
+        ftth64_id=ftth64.id,
+        package_id=package.id
+    )
+
+    device = DeviceInfo(
+        public_id=str(uuid.uuid4()),
+        customer_id=customer.id,
+        vc_number="VC-BILL-001",
+        status_id=archived.id
+    )
+
+    session.add(device)
+    session.commit()
+
+    today = datetime.today()
+
+    payload = {
+        "bill_code": "VC001KVR26-0032",
+        "bill_date": today.isoformat(),
+        "start_date": today.isoformat(),
+        "end_date": (today + timedelta(days=30)).isoformat(),
+        "monthly_count": 1,
+        "bill_amount": 1500,
+        "customer_public_id": customer.public_id,
+        "package_id": package.id
+    }
+
+    # --- API call ---
+    response = client.post("/bill/", json=payload)
+    data = response.json()
+
+    assert response.status_code == 409
+    assert "archived" in data["detail"].lower()
+
+
+
+
+
 

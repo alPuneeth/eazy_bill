@@ -21,6 +21,7 @@ from app.services.bill.bill_gen_code_vill import generate_bill_code_for_village
 from app.services.bill.bills_list import build_bill_list_query
 from app.services.bill.bill_mapper import map_bill_row
 from app.services.bill.bill_exceptions import (
+    ArchivedCustomerBillingError,
     BillNotFoundError,
     OverlappingBillingPeriod,
     VillageNotFoundError,
@@ -176,7 +177,13 @@ def create_bill(
             status_code=400,
             detail="Invalid package"
         )
-
+    
+    except ArchivedCustomerBillingError:
+        raise HTTPException(
+            status_code=409,
+            detail="Bill can't be created for archived customer"
+        )
+    
     except BillConflictError:
         raise HTTPException(
             status_code=409,

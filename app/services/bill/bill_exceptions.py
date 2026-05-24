@@ -10,6 +10,10 @@ class BillNotFoundError(BillError):
     pass
 
 
+class ArchivedCustomerBillingError(BillError):
+    pass
+
+
 class BillConflictError(BillError):
     pass
 

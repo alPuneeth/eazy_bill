@@ -3,13 +3,16 @@ from sqlalchemy.exc import IntegrityError
 
 from app.models.bill.bill import Bill
 from app.models.core_models.customer import Customer
+from app.models.devices.device_info import DeviceInfo
 from app.models.lookup.package import Package
 from app.models.core_models.user import User
 
+from app.models.lookup.status import Status, StatusEnum
 from app.schemas.bill import BillRead, BillCreate
 from app.schemas.common import IdValueRead, CreatorSummary
 
 from app.services.bill.bill_exceptions import (
+    ArchivedCustomerBillingError,
     BillConflictError,
     OverlappingBillingPeriod,
     CustomerNotFoundError,
@@ -48,6 +51,17 @@ def create_bll(
         current_user=current_user,
         session=session,
     )
+
+    device = session.exec(
+        select(DeviceInfo).where(DeviceInfo.customer_id == customer.id)
+    ).one()
+
+    archived_status = session.exec(
+        select(Status).where(Status.name == StatusEnum.ARCHIVED)
+    ).first()
+
+    if device.status_id == archived_status.id:
+        raise ArchivedCustomerBillingError()
 
     # 2. Validate package
     package = session.get(Package, payload.package_id)
