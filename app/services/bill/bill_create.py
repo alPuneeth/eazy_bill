@@ -60,7 +60,7 @@ def create_bll(
         select(Status).where(Status.name == StatusEnum.ARCHIVED)
     ).first()
 
-    if device.status_id == archived_status.id:
+    if archived_status and device.status_id == archived_status.id:
         raise ArchivedCustomerBillingError()
 
     # 2. Validate package
