@@ -39,12 +39,31 @@ async def lifespan(app: FastAPI):
 
 
 # -------------------- APP INIT --------------------
+tags_metadata = [
+    {"name": "Health"},
+    {"name": "Auth"},
+    {"name": "User"},
+    {"name": "Agent"},
+    {"name": "Village"},
+    {"name": "Package"},
+    {"name": "Status"},
+    {"name": "CustomerType"},
+    {"name": "FTTH64"},
+    {"name": "TVType"},
+    {"name": "Customer"},
+    {"name": "DeviceInfo"},
+    {"name": "Bill"},
+    {"name": "Reports"},
+
+]
+
 
 app = FastAPI(
     title=settings.app_name,
     debug=settings.debug,
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    openapi_tags=tags_metadata
     ) 
 
 app.include_router(api_router)
@@ -72,7 +91,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # -------------------- ROOT --------------------
 
-@app.get("/")
+@app.get("/", tags=["Health"])
 def home():
     return {
         "status": "OK",
@@ -83,7 +102,7 @@ def home():
 
 # -------------------- DB CHECK --------------------
 
-@app.get("/db_check")
+@app.get("/db_check", tags=["Health"])
 def db_check(db: Session = Depends(get_session)):
     try:
         db.exec(select(1))
