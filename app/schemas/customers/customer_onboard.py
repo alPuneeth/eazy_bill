@@ -196,7 +196,7 @@ class CustomerOnboardRead(BaseModel):
 
     village: VillageSummary
     customer_type: IdValueRead
-    ftth64: Optional[IdValueRead] = None
+    ftth64: IdValueRead
 
     description: Optional[str] = None
 

@@ -186,6 +186,8 @@ def test_get_customer_success(client, session):
     assert data["name"] == customer.name
     assert data["phone"] == customer.phone
     assert data["vc_number"] == "VC999"
+    assert data["ftth64"] is not None
+    assert data["ftth64"]["id"] == ftth64.id
 
 
 def test_get_customer_not_found(client):
