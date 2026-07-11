@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 
 
 from app.db.session import get_session
+from app.models.core_models.user import UserRole
 from app.services.devices.device_info import build_deviceinfo_read
 from app.models.lookup.status import Status, StatusEnum
 from app.models.core_models.customer import Customer
@@ -37,7 +38,7 @@ def list_device_info(
     )
 
     # enforce restriction at DB level
-    if current_user.role == "agent":
+    if current_user.role == UserRole.AGENT:
         stmt = stmt.where(Village.agent_id == current_user.id)
 
     devices = session.exec(stmt).all()

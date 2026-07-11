@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, joinedload
 
 from app.dependencies.auth import get_current_user
 from app.services.user.user_rules import apply_user_code_rules
@@ -34,7 +34,7 @@ def read_me(current_user=Depends(get_current_user)):
 def list_users(
     session: Session = Depends(get_session)
 ):
-    stmt = select(User).options(selectinload(User.villages).selectinload(Village.agent))
+    stmt = select(User).options(selectinload(User.villages).joinedload(Village.agent))
     users = session.exec(stmt).all()
 
     return [to_user_read(user) for user in users]
@@ -46,7 +46,7 @@ def get_user(
     user_public_id: str,
     session: Session = Depends(get_session)
 ):
-    stmt = select(User).where(User.public_id == user_public_id).options(selectinload(User.villages).selectinload(Village.agent))
+    stmt = select(User).where(User.public_id == user_public_id).options(selectinload(User.villages).joinedload(Village.agent))
     user = session.exec(stmt).first()
 
     if not user:

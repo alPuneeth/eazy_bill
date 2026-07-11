@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload
 
 
 from app.dependencies.rbac import require_admin
+from app.models.core_models.user import UserRole
 from app.services.village_mapper import to_village_read
 from app.db.session import get_session
 from app.models.core_models.user import User
@@ -28,10 +29,10 @@ def list_villages(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
-    stmt = select(Village).options(selectinload(Village.agent))
+    stmt = select(Village).options(joinedload(Village.agent))
 
     # RBAC Filter
-    if current_user.role != "admin":
+    if current_user.role == UserRole.AGENT:
         stmt = stmt.where(Village.agent_id == current_user.id)
 
     villages = session.exec(stmt).all()
@@ -48,10 +49,10 @@ def get_village(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
-    statement =  select(Village).options(selectinload(Village.agent))
+    statement =  select(Village).options(joinedload(Village.agent))
 
     # RBAC Filter
-    if current_user.role != "admin":
+    if current_user.role == UserRole.AGENT:
         statement = statement.where(Village.agent_id == current_user.id)
 
     village = session.exec(
@@ -87,7 +88,7 @@ def create_village(
      # 🔑 reload with relationship
     village = session.exec(
         select(Village)
-        .options(selectinload(Village.agent))
+        .options(joinedload(Village.agent))
         .where(Village.id == village.id)
     ).first()
 
@@ -103,7 +104,7 @@ def update_village(
 ):
     village = session.exec(
     select(Village)
-    .options(selectinload(Village.agent))
+    .options(joinedload(Village.agent))
     .where(Village.id == village_id)
 ).first()
 
@@ -111,8 +112,7 @@ def update_village(
         raise HTTPException(status_code=404, detail="Village not found")
 
     update_data = payload.model_dump(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(village, key, value)
+    village.sqlmodel_update(update_data)
 
     try:
         session.commit()
@@ -126,7 +126,7 @@ def update_village(
      # 🔑 reload again (important after update)
     village = session.exec(
         select(Village)
-        .options(selectinload(Village.agent))
+        .options(joinedload(Village.agent))
         .where(Village.id == village_id)
     ).first()
 

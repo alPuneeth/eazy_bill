@@ -2,7 +2,7 @@ import logging
 from fastapi import HTTPException
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload
 
 from app.models.core_models.user import User, UserRole
 from app.models.lookup.village import Village
@@ -116,7 +116,7 @@ def assign_villages_to_agent_service(
     # 5. Re-fetch with relationship
     villages = session.exec(
         select(Village)
-        .options(selectinload(Village.agent))
+        .options(joinedload(Village.agent))
         .where(Village.id.in_(village_ids))
     ).all()
 
@@ -266,7 +266,7 @@ def replace_villages_to_agent_service(
     # 8. Re-fetch with relationship
     villages = session.exec(
         select(Village)
-        .options(selectinload(Village.agent))
+        .options(joinedload(Village.agent))
         .where(Village.id.in_(village_ids))
     ).all()
 

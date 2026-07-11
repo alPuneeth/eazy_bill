@@ -1,10 +1,11 @@
 from sqlmodel import select, Session
 from fastapi import HTTPException, status
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload
 
 from app.models.core_models.customer import Customer
 from app.schemas.bill import BillRead
 from app.models.core_models.user import User
+from app.models.core_models.user import UserRole
 from app.models.lookup.village import Village
 from app.models.bill.bill import Bill
 from app.schemas.common import IdValueRead, CreatorSummary
@@ -28,7 +29,7 @@ def get_customer_bills_all_time(
             detail="Customer not found"
         )
 
-    if current_user.role == "agent":
+    if current_user.role == UserRole.AGENT:
         village = session.get(Village, customer.village_id)
 
         if not village or village.agent_id != current_user.id:
@@ -41,8 +42,8 @@ def get_customer_bills_all_time(
         select(Bill)
         .where(Bill.customer_id == customer.id)
         .options(
-                selectinload(Bill.package),
-                selectinload(Bill.created_by)
+                joinedload(Bill.package),
+                joinedload(Bill.created_by)
                     )
         .order_by(Bill.bill_date.desc())
     )
