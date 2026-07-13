@@ -138,7 +138,6 @@ def create_bll(
             value=package.name
         ),
         created_by_id=CreatorSummary(
-            id=current_user.id,
             public_id=current_user.public_id,
             name=current_user.name
         ),

@@ -58,7 +58,6 @@ def get_bill_by_public_id(bill_public_id: str, current_user:User, session:Sessio
             value=row.package_name
         ),
         created_by_id=CreatorSummary(
-            id=row.creator_id,
             public_id=row.creator_public_id,
             name=row.creator_name
         ),

@@ -112,7 +112,8 @@ def build_customer_onboard_list(session: Session, current_user:User) -> list[Cus
                                     if bill_package else None
                                 ),
                                 created_by_id=(
-                                    CreatorSummary(id=creator.id, public_id=creator.public_id, name=creator.name)
+                                    CreatorSummary(
+                                        public_id=creator.public_id, name=creator.name)
                                     if creator else None
                                 ),
 

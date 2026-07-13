@@ -13,6 +13,5 @@ class VillageSummary(BaseModel):
 
 
 class CreatorSummary(BaseModel):
-    id: int
     public_id: str
     name: str

@@ -108,10 +108,9 @@ class UserCreate(BaseModel):
 class UserRead(BaseModel):
     model_config = {"from_attributes": True}
 
-    id: int
     public_id: str
 
-    user_code: UserCodeStr  # since we fetch from db where the field is non null setting it optional here is incorrect
+    user_code: UserCodeStr 
     name: str
     phone: str
 

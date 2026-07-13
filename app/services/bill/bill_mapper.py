@@ -16,7 +16,6 @@ def map_bill_row(r) -> BillRead:
             value=r["package_value"]
         ),
         created_by_id=CreatorSummary(
-            id=r["created_by_id"],
             public_id=r["created_by_public_id"],
             name=r["created_by_name"]
         ),

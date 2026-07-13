@@ -101,7 +101,6 @@ def build_customer_onboard_read(customer_public_id: str, session: Session, curre
                 value=bill_package.name
             ),
             created_by_id=CreatorSummary(
-                id=creator.id,
                 public_id=creator.public_id,
                 name=creator.name
             ),
