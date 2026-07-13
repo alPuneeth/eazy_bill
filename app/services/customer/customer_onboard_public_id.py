@@ -158,7 +158,7 @@ def patch_customer_onboard(
     # Fetch device (single active device assumption)
     device = session.exec(
         select(DeviceInfo).where(DeviceInfo.customer_id == customer.id)
-    ).scalars().first()
+    ).first()
 
     if not device:
         raise ValueError("Device not found")
