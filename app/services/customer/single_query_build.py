@@ -76,7 +76,7 @@ def build_customer_onboard_list(session: Session, current_user:User) -> list[Cus
     if current_user.role == UserRole.AGENT:
         stmt = stmt.where(Village.agent_id == current_user.id)
 
-    rows = session.execute(stmt).all()
+    rows = session.exec(stmt).all()
 
     results: list[CustomerOnboardRead] = []
 
