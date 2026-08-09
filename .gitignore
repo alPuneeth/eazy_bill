@@ -10,3 +10,4 @@ read_me_dev.txt
 .postman/
 postman/
 .env.docker
+.env.save
