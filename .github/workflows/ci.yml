@@ -44,11 +44,7 @@ jobs:
       # Step 4 — run pytest inside the test container
       # --rm removes the container after tests complete
       - name: Run tests
-        run: docker compose run --rm \
-          -e DATABASE_URL \
-          -e TEST_DATABASE_URL \
-          -e SECRET_KEY \
-          test
+        run: docker compose run --rm -e DATABASE_URL -e TEST_DATABASE_URL -e SECRET_KEY test
 
           
 
