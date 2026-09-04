@@ -22,6 +22,12 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       TEST_DATABASE_URL:  ${{ secrets.TEST_DATABASE_URL }}
       SECRET_KEY:  ${{ secrets.SECRET_KEY }}
+      DEV_DB_USER: ${{ secrets.DEV_DB_USER }}
+      DEV_DB_PASSWORD: ${{ secrets.DEV_DB_PASSWORD }}
+      DEV_DB_NAME: ${{ secrets.DEV_DB_NAME }}
+      TEST_DB_USER: ${{ secrets.TEST_DB_USER }}
+      TEST_DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+      TEST_DB_NAME: ${{ secrets.TEST_DB_NAME }}
 
     steps:
       # Step 1 - checkout your code onto the Ubuntu machine
