@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import uuid
 
 from app.models.bill.bill import Bill
@@ -28,9 +28,9 @@ def create_bill(session,
                 ):
     
     bill_code = bill_code or "VC001KVR26-001"
-    bill_date = bill_date or datetime.today()
-    start_date = start_date or datetime.today()
-    end_date = end_date or datetime.today() + timedelta(days=30)
+    bill_date = bill_date or datetime.now(timezone.utc)
+    start_date = start_date or datetime.now(timezone.utc)
+    end_date = end_date or datetime.now(timezone.utc) + timedelta(days=30)
     monthly_count = monthly_count or 1
     bill_amount = bill_amount or 500
     public_id = public_id or str(uuid.uuid4())

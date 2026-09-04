@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 import uuid
 
 from sqlmodel import select
@@ -48,7 +48,7 @@ def test_create_bill_success(client, session):
     session.commit()
 
     # --- payload ---
-    today = datetime.today()
+    today = datetime.now(timezone.utc)
     payload = {
         "bill_code": "VC001KVR26-001",
         "bill_date": today.isoformat(),
@@ -111,7 +111,7 @@ def test_create_bill_overlapping_period(client, session):
     session.add(device)
     session.commit()
 
-    today = datetime.today()
+    today = datetime.now(timezone.utc)
 
     # --- first bill ---
     first_payload = {
@@ -151,7 +151,7 @@ def test_create_bill_duplicate_code(client, session, admin_user):
 
     customer = session.get(Customer, bill.customer_id)
 
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
 
     payload = {
         "bill_code": bill.bill_code,  # duplicate
@@ -175,7 +175,7 @@ def test_create_bill_invalid_date_range(client, session, admin_user):
     bill = create_bill(session, created_by_id=admin_user.id)
     customer = session.get(Customer, bill.customer_id)
 
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
 
     payload = {
         "bill_code": "INVALID-001",
@@ -283,7 +283,7 @@ def test_update_bill_overlap(client, session, admin_user):
     """
     Verify that updating a bill to overlap with an existing bill period returns 409.
     """
-    today = datetime.today()
+    today = datetime.now(timezone.utc)
 
     bill1 = create_bill(
         session,
@@ -356,7 +356,7 @@ def test_create_bill_for_archived_customer_returns_error(client, session):
     session.add(device)
     session.commit()
 
-    today = datetime.today()
+    today = datetime.now(timezone.utc)
 
     payload = {
         "bill_code": "VC001KVR26-0032",
