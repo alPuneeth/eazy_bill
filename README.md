@@ -3,8 +3,8 @@
 ![Python](https://img.shields.io/badge/Python-3.13-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green)
 ![Docker](https://img.shields.io/badge/Docker-Containerized-blue)
-![Tests](https://img.shields.io/badge/Tests-41-success)
-![Coverage](https://img.shields.io/badge/Coverage-73%25-yellow)
+![Tests](https://img.shields.io/badge/Tests-42-success)
+![Coverage](https://img.shields.io/badge/Coverage-74%25-yellow)
 
 A containerized REST API backend for a cable operator's billing and customer management system. Built to model realistic operational constraints — billing consistency, concurrency safety, role-based access, and automated deployment.
 
@@ -102,8 +102,8 @@ Three-stage Dockerfile:
 
 ## Testing
 
-- **41 endpoint-level integration tests** against an isolated PostgreSQL test database
-- **73% code coverage**
+- **42 endpoint-level integration tests** against an isolated PostgreSQL test database
+- **74% code coverage**
 - Rollback-based test isolation via pytest fixtures
 - Reusable factories for customers, bills, users, and villages
 
@@ -147,6 +147,7 @@ pytest tests/ --cov=app --cov-report=term-missing
 ```bash
 git clone https://github.com/alPuneeth/eazy_bill.git
 cd eazy_bill
+cp .env.example .env                 # fill in your values
 cp .env.docker.example .env.docker   # fill in your values
 docker compose up app                 # starts db, runs migrations, starts server
 ```
@@ -173,6 +174,6 @@ uvicorn app.main:app --reload
 
 ## Notes
 
-- `.env`, `.env.docker`, and `venv/` are excluded via `.gitignore`
+- `.env` and `.env.docker` hold local secrets and are excluded via `.gitignore`; `venv/` is also excluded
+- `.env.example` and `.env.docker.example` are committed templates — copy and fill in your own values
 - All schema changes go through Alembic
-- `postman/` contains API collections for manual testing
