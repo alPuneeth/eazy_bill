@@ -9,7 +9,6 @@
 A containerized REST API backend for a cable operator's billing and customer management system. Built to model realistic operational constraints — billing consistency, concurrency safety, role-based access, and automated deployment.
 
 Repository: https://github.com/alPuneeth/eazy_bill
-Live deployment available on request.
 
 ---
 
