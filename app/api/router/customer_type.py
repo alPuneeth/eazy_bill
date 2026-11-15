@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
@@ -42,7 +42,7 @@ def get_customer_type(
     return customer_type
 
 
-@router.post("/", response_model=CustomerTypeRead,
+@router.post("/", response_model=CustomerTypeRead, status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(require_admin)])
 def create_customer_type(
     payload: CustomerTypeCreate,
