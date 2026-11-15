@@ -19,7 +19,7 @@ def test_create_user_success(client):
     response = client.post("/users/", json=payload)
     data = response.json()
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert data["name"] == payload["name"]
     assert data["phone"] == payload["phone"]
     assert data["role"] == UserRole.AGENT.value

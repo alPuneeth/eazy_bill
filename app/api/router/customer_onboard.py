@@ -177,7 +177,7 @@ def get_customer(
 
 
 # POST - single payload
-@router.post("/", response_model=CustomerOnboardRead)
+@router.post("/", response_model=CustomerOnboardRead, status_code=status.HTTP_201_CREATED)
 def create_customer(
     payload: CustomerOnboardCreate,
     session: Session = Depends(get_session),

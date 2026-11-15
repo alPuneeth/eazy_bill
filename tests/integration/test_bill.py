@@ -65,7 +65,7 @@ def test_create_bill_success(client, session):
     data = response.json()
 
     # --- assertions ---
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert data["bill_code"] == payload["bill_code"]
     assert data["customer_public_id"] == customer.public_id
 
@@ -125,7 +125,7 @@ def test_create_bill_overlapping_period(client, session):
         "package_id": package.id
     }
     first_response = client.post("/bills/", json=first_payload)
-    assert first_response.status_code == 200
+    assert first_response.status_code == 201
 
     # --- overlapping bill ---
     overlap_payload = {

@@ -1,7 +1,9 @@
 import logging
+
+from tests.factories import status
 logger = logging.getLogger(__name__)
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
 from app.dependencies.rbac import get_current_user
@@ -153,7 +155,7 @@ def get_bill(
         )
 
 
-@router.post("/", response_model=BillRead)
+@router.post("/", response_model=BillRead, status_code=status.HTTP_201_CREATED)
 def create_bill(
     payload: BillCreate,
     session: Session = Depends(get_session),

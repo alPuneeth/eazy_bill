@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
@@ -66,7 +66,7 @@ def get_village(
     return to_village_read(village)
 
 
-@router.post("/", response_model=VillageRead,
+@router.post("/", response_model=VillageRead, status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(require_admin)])
 def create_village(
     payload: VillageCreate,

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload, joinedload
@@ -55,6 +55,7 @@ def get_user(
 
 
 @router.post("/", response_model=UserRead,
+             status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(require_admin)])
 def create_user(
     payload: UserCreate,

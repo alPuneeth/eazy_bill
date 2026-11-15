@@ -56,7 +56,7 @@ def test_create_customer_success(client, session):
     data = response.json()
 
     # assertions
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert data["name"] == payload["name"]
     assert data["phone"] == payload["phone"]
     assert data["vc_number"] == payload["vc_number"]
@@ -110,7 +110,7 @@ def test_create_customer_duplicate_vc_number(client, session):
     response1 = client.post("/customers/", json=payload)
     data = response1.json()
 
-    assert response1.status_code == 200
+    assert response1.status_code == 201
     assert data["vc_number"] == payload["vc_number"]
 
      # --- second customer with same vc_number ---
@@ -465,7 +465,7 @@ def test_onboard_default_status_inactive(client, session):
 
     # --- API call ---
     response = client.post("/customers/", json=payload)
-    assert response.status_code == 200
+    assert response.status_code == 201
 
     # --- DB verification ---
     device = session.exec(

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
@@ -39,7 +39,7 @@ def get_tv_type(
     return tv_type
 
 
-@router.post("/", response_model=TVTypeRead,
+@router.post("/", response_model=TVTypeRead, status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(require_admin)])
 def create_tv_type(
     payload: TVTypeCreate,
