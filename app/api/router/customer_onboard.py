@@ -3,7 +3,7 @@ import logging
 from app.services.customer.delete_customer import delete_customer_service
 logger = logging.getLogger(__name__)
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 
@@ -25,6 +25,7 @@ from app.services.customer.customer_onboard_public_id import (
     )
 from app.models.core_models.customer import Customer
 from app.models.core_models.user import User
+from app.services.customer.delete_customer import CustomerNotFoundError
 from app.services.customer.customer_list import build_customer_list_query
 from app.dependencies.rbac import get_current_user
 
@@ -36,7 +37,7 @@ from app.schemas.customers.customer_onboard import (
 )
 
 router = APIRouter(
-    prefix="/customer",
+    prefix="/customers",
     tags=["Customer"]
     )
 
@@ -280,7 +281,7 @@ def update_customer(
     return build_customer_onboard_read(customer.public_id, session, current_user)
 
 
-@router.delete("/{customer_public_id}")
+@router.delete("/{customer_public_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_customer(
     customer_public_id: str,
     session: Session = Depends(get_session),
@@ -290,7 +291,13 @@ def delete_customer(
         delete_customer_service(customer_public_id, session, current_user)
         session.commit() 
 
-    except ValueError:
+    except CustomerNotFoundError:
         session.rollback()
         raise HTTPException(status_code=404, detail="Customer not found")
-    return {"message": "Customer deleted successfully"}
+    
+    except Exception:
+        session.rollback()
+        raise
+
+    # 204 must have no body, so return an empty Response instead of the message dict
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
