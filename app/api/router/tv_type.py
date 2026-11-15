@@ -14,7 +14,7 @@ from app.schemas.lookup.tv_type import (
 )
 
 router = APIRouter(
-    prefix="/tv_types",
+    prefix="/tv-types",
     tags=["TVType"],
     dependencies=[Depends(get_current_user)]
     )

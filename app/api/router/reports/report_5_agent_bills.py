@@ -16,7 +16,7 @@ router = APIRouter(
 
 
 @router.get(
-    "/bills_by_agent/{agent_public_id}",
+    "/bills-by-agent/{agent_public_id}",
     response_model=list[BillByAgentRead]
 )
 def bills_by_agent(

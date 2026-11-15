@@ -15,7 +15,7 @@ router = APIRouter(
 
 
 @router.get(
-    "/collections_summary",
+    "/collections-summary",
     response_model=CollectionsSummaryRead
 )
 def collections_summary(
