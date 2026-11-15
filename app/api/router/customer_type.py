@@ -14,7 +14,7 @@ from app.schemas.lookup.customer_type import (
 )
 
 router = APIRouter(
-    prefix="/customer_type",
+    prefix="/customer_types",
     tags=["CustomerType"],
     dependencies=[Depends(get_current_user)]
     )

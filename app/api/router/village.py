@@ -18,7 +18,7 @@ from app.schemas.lookup.village import (
 )
 
 router = APIRouter(
-    prefix="/village",
+    prefix="/villages",
     tags=["Village"],
     dependencies=[Depends(get_current_user)]
     )

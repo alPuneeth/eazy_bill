@@ -14,7 +14,7 @@ from app.schemas.lookup.status import (
 )
 
 router = APIRouter(
-    prefix="/status",
+    prefix="/statuses",
     tags=["Status"],
     dependencies=[Depends(get_current_user)]
     )

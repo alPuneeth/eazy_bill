@@ -13,7 +13,7 @@ from app.schemas.lookup.package import (
 )
 
 router = APIRouter(
-    prefix="/package",
+    prefix="/packages",
     tags=["Package"],
     dependencies=[Depends(get_current_user)]
     )

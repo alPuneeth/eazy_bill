@@ -21,7 +21,7 @@ def test_assign_villages_to_agent(client, session):
     }
 
     response = client.post(
-        f"/agent/{agent.public_id}/villages",
+        f"/agents/{agent.public_id}/villages",
         json=payload
     )
 
@@ -52,10 +52,10 @@ def test_assign_villages_to_agent_duplicate(client, session):
     payload = {"village_ids": [v1.id], "force": False}
 
     # first call
-    client.post(f"/agent/{agent.public_id}/villages", json=payload)
+    client.post(f"/agents/{agent.public_id}/villages", json=payload)
 
     # second call
-    response = client.post(f"/agent/{agent.public_id}/villages", json=payload)
+    response = client.post(f"/agents/{agent.public_id}/villages", json=payload)
 
     data = response.json()
 
@@ -77,9 +77,9 @@ def test_assign_villages_conflict(client, session):
 
     payload = {"village_ids": [v1.id], "force": False}
 
-    client.post(f"/agent/{agent1.public_id}/villages", json=payload)
+    client.post(f"/agents/{agent1.public_id}/villages", json=payload)
 
-    response = client.post(f"/agent/{agent2.public_id}/villages", json=payload)
+    response = client.post(f"/agents/{agent2.public_id}/villages", json=payload)
     data = response.json()
 
     assert response.status_code == 400
@@ -100,7 +100,7 @@ def test_assign_villages_force(client, session):
     client.post(f"/agent/{agent1.public_id}/villages", json=payload)
 
     payload = {"village_ids": [v1.id], "force": True}
-    reassign_response = client.post(f"/agent/{agent2.public_id}/villages", json=payload)
+    reassign_response = client.post(f"/agents/{agent2.public_id}/villages", json=payload)
 
     assert reassign_response.status_code == 200
     data = reassign_response.json()
@@ -135,7 +135,7 @@ def test_replace_villages_success(client, session):
 
     # assign
     client.put(
-        f"/agent/{agent.public_id}/villages",
+        f"/agents/{agent.public_id}/villages",
         json=payload
         )
 
@@ -150,7 +150,7 @@ def test_replace_villages_success(client, session):
 
     # make API call
     response = client.put(
-        f"/agent/{agent.public_id}/villages",
+        f"/agents/{agent.public_id}/villages",
         json=payload
         )
     
@@ -183,14 +183,14 @@ def test_replace_villages_empty(client, session):
     payload = {"village_ids": [v1.id]}
 
     client.put(
-        f"/agent/{agent.public_id}/villages",
+        f"/agents/{agent.public_id}/villages",
         json=payload
     )
 
     payload = {"village_ids": []}
 
     response = client.put(
-        f"/agent/{agent.public_id}/villages",
+        f"/agents/{agent.public_id}/villages",
         json=payload
     )
 
