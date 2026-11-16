@@ -149,6 +149,7 @@ Interactive documentation is served at `/docs`.
 - `POST /customers/bulk` returns `200` with `success` and `failed` lists, because a request can partly succeed
 - Reference-data resources (`/villages`, `/packages`, `/statuses`, `/tv-types`, `/ftth64`) are addressed by integer id; they are admin-managed lookup data, whereas customers, bills, users and devices use UUID public ids
 - `GET /db_check` keeps its underscore because the Docker `HEALTHCHECK` depends on it
+- `POST /reports/bills-with-optional-filters` uses `POST` only to carry a structured filter body; it is read-only and creates nothing
 
 ---
 
