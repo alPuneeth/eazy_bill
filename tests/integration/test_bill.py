@@ -61,11 +61,11 @@ def test_create_bill_success(client, session):
     }
 
     # --- API call ---
-    response = client.post("/bill/", json=payload)
+    response = client.post("/bills/", json=payload)
     data = response.json()
 
     # --- assertions ---
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert data["bill_code"] == payload["bill_code"]
     assert data["customer_public_id"] == customer.public_id
 
@@ -124,8 +124,8 @@ def test_create_bill_overlapping_period(client, session):
         "customer_public_id": customer.public_id,
         "package_id": package.id
     }
-    first_response = client.post("/bill/", json=first_payload)
-    assert first_response.status_code == 200
+    first_response = client.post("/bills/", json=first_payload)
+    assert first_response.status_code == 201
 
     # --- overlapping bill ---
     overlap_payload = {
@@ -138,7 +138,7 @@ def test_create_bill_overlapping_period(client, session):
         "customer_public_id": customer.public_id,
         "package_id": package.id
     }
-    response = client.post("/bill/", json=overlap_payload)
+    response = client.post("/bills/", json=overlap_payload)
 
     assert response.status_code == 409
 
@@ -164,7 +164,7 @@ def test_create_bill_duplicate_code(client, session, admin_user):
         "package_id": bill.package_id 
     }
 
-    response = client.post("/bill/", json=payload)
+    response = client.post("/bills/", json=payload)
     assert response.status_code in (400, 409)
 
 
@@ -188,7 +188,7 @@ def test_create_bill_invalid_date_range(client, session, admin_user):
         "package_id": bill.package_id 
     }
 
-    response = client.post("/bill/", json=payload)
+    response = client.post("/bills/", json=payload)
     assert response.status_code == 422
 
 
@@ -198,7 +198,7 @@ def test_get_bill_success(client, session, admin_user):
     """
     bill = create_bill(session, created_by_id=admin_user.id)
 
-    response = client.get(f"/bill/{bill.public_id}")
+    response = client.get(f"/bills/{bill.public_id}")
     data = response.json()
 
     assert response.status_code == 200
@@ -211,7 +211,7 @@ def test_get_bill_failure(client):
     Verify that fetching a non-existent bill returns 404.
     """
     public_id = str(uuid.uuid4())
-    response = client.get(f"/bill/{public_id}")
+    response = client.get(f"/bills/{public_id}")
     assert response.status_code == 404
 
 
@@ -227,7 +227,7 @@ def test_update_bill_success(client, session, admin_user):
         "bill_amount": 600
     }
 
-    response = client.patch(f"/bill/{bill.public_id}", json=payload)
+    response = client.patch(f"/bills/{bill.public_id}", json=payload)
     data = response.json()
 
     assert response.status_code == 200
@@ -254,7 +254,7 @@ def test_update_bill_not_on_bill_date(client, session, admin_user):
             datetime.min.time()).isoformat()
     }
 
-    response = client.patch(f"/bill/{bill.public_id}", json=payload)
+    response = client.patch(f"/bills/{bill.public_id}", json=payload)
 
     assert response.status_code == 400
 
@@ -269,7 +269,7 @@ def test_bills_by_customer_public_id(client, session, admin_user):
         select(Customer).where(bill.customer_id == Customer.id)
     ).first()
 
-    response = client.get(f"/bill/customer/{customer.public_id}")
+    response = client.get(f"/bills/customers/{customer.public_id}")
     data = response.json()
 
     assert response.status_code == 200
@@ -309,7 +309,7 @@ def test_update_bill_overlap(client, session, admin_user):
         "end_date": bill1.end_date.isoformat()
     }
 
-    response = client.patch(f"/bill/{bill2.public_id}", json=payload)
+    response = client.patch(f"/bills/{bill2.public_id}", json=payload)
     assert response.status_code == 409
 
 
@@ -317,7 +317,7 @@ def test_create_bill_unauthorized(raw_client):
     """
     Verify that creating a bill without authentication returns 401.
     """
-    response = raw_client.post("/bill/", json={})
+    response = raw_client.post("/bills/", json={})
     assert response.status_code == 401
 
 
@@ -370,13 +370,39 @@ def test_create_bill_for_archived_customer_returns_error(client, session):
     }
 
     # --- API call ---
-    response = client.post("/bill/", json=payload)
+    response = client.post("/bills/", json=payload)
     data = response.json()
 
     assert response.status_code == 409
     assert "archived" in data["detail"].lower()
 
 
+def test_generate_bill_code_first_bill_of_year(client, session, admin_user):
+    """
+    Verify the first code for a village with no bills this year ends with -001.
+    """
+    # --- setup: a village with no bills at all ---
+    village = create_village(session)
+    session.commit()
+
+    # --- API call (the client is authenticated as admin_user) ---
+    response = client.get(f"/bills/villages/{village.village_code}/next-bill-code")
+
+    # --- expected value built the same way the service builds it ---
+    year_short = datetime.now().year % 100
+    expected = f"{village.village_code.upper()}{admin_user.user_code}{year_short:02d}-001"
+
+    assert response.status_code == 200
+    assert response.json() == expected    # the endpoint returns a plain JSON string
+
+
+def test_generate_bill_code_village_not_found(client):
+    """
+    Verify 404 when the village code does not exist.
+    """
+    response = client.get("/bills/villages/NO_SUCH_VILLAGE/next-bill-code")
+
+    assert response.status_code == 404
 
 
 

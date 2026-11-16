@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
@@ -14,13 +14,34 @@ from app.schemas.lookup.status import (
 )
 
 router = APIRouter(
-    prefix="/status",
+    prefix="/statuses",
     tags=["Status"],
     dependencies=[Depends(get_current_user)]
     )
 
 
-@router.post("/", response_model=StatusRead,
+
+
+@router.get("/", response_model=list[StatusRead])
+def list_statuses(
+    session: Session = Depends(get_session)
+):
+    statuses = session.exec(select(Status)).all()
+    return statuses
+
+
+@router.get("/{status_id}", response_model=StatusRead)
+def get_status(
+    status_id: int,
+    session: Session = Depends(get_session)
+):
+    status = session.get(Status, status_id)
+    if not status:
+        raise HTTPException(status_code=404, detail="Status not found")
+    return status
+
+
+@router.post("/", response_model=StatusRead,  status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(require_admin)])
 def create_status(
     payload: StatusCreate,
@@ -41,25 +62,6 @@ def create_status(
     
     session.refresh(status)
     return status
-
-
-@router.get("/{status_id}", response_model=StatusRead)
-def get_status(
-    status_id: int,
-    session: Session = Depends(get_session)
-):
-    status = session.get(Status, status_id)
-    if not status:
-        raise HTTPException(status_code=404, detail="Status not found")
-    return status
-
-
-@router.get("/", response_model=list[StatusRead])
-def list_statuses(
-    session: Session = Depends(get_session)
-):
-    statuses = session.exec(select(Status)).all()
-    return statuses
 
 
 @router.patch("/{status_id}", response_model=StatusRead,

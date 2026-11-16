@@ -52,11 +52,11 @@ def test_create_customer_success(client, session):
     }
 
     # API call
-    response = client.post("/customer/", json=payload)
+    response = client.post("/customers/", json=payload)
     data = response.json()
 
     # assertions
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert data["name"] == payload["name"]
     assert data["phone"] == payload["phone"]
     assert data["vc_number"] == payload["vc_number"]
@@ -107,10 +107,10 @@ def test_create_customer_duplicate_vc_number(client, session):
         "package_id": package.id
     }
 
-    response1 = client.post("/customer/", json=payload)
+    response1 = client.post("/customers/", json=payload)
     data = response1.json()
 
-    assert response1.status_code == 200
+    assert response1.status_code == 201
     assert data["vc_number"] == payload["vc_number"]
 
      # --- second customer with same vc_number ---
@@ -125,7 +125,7 @@ def test_create_customer_duplicate_vc_number(client, session):
     }
 
     # API call
-    response2 = client.post("/customer/", json=payload)
+    response2 = client.post("/customers/", json=payload)
 
     # assertions
     assert response2.status_code == 409
@@ -177,7 +177,7 @@ def test_get_customer_success(client, session):
     session.commit()
 
     # --- API call ---
-    response = client.get(f"/customer/{customer.public_id}")
+    response = client.get(f"/customers/{customer.public_id}")
     data = response.json()
 
     # --- assertions ---
@@ -194,7 +194,7 @@ def test_get_customer_not_found(client):
     """
     Verify 404 when customer does not exist.
     """
-    response = client.get("/customer/non-existent-id")
+    response = client.get("/customers/non-existent-id")
 
     assert response.status_code == 404
 
@@ -238,7 +238,7 @@ def test_list_customers_success(client, session):
     session.commit()
 
     # --- API call ---
-    response = client.get("/customer/?page=1&page_size=10")
+    response = client.get("/customers/?page=1&page_size=10")
     data = response.json()
 
     # --- assertions ---
@@ -259,7 +259,7 @@ def test_list_customers_empty(client):
     Verify empty response when no customers exist.
     """
 
-    response = client.get("/customer/?page=1&page_size=10")
+    response = client.get("/customers/?page=1&page_size=10")
     data = response.json()
 
     assert response.status_code == 200
@@ -309,7 +309,7 @@ def test_update_customer_success(client, session):
     }
 
     # --- API call ---
-    response = client.patch(f"/customer/{customer.public_id}", json=payload)
+    response = client.patch(f"/customers/{customer.public_id}", json=payload)
     data = response.json()
 
     # --- assertions ---
@@ -333,7 +333,7 @@ def test_update_customer_not_found(client):
     Verify 404 when updating non-existent customer.
     """
     payload = {"name": "Does not matter"}
-    response = client.patch("/customer/non-existent-id", json=payload)
+    response = client.patch("/customers/non-existent-id", json=payload)
 
     assert response.status_code == 404
 
@@ -376,7 +376,7 @@ def test_create_customers_bulk_success(client, session):
         ]
     }
 
-    response = client.post("/customer/bulk", json=payload)
+    response = client.post("/customers/bulk", json=payload)
     data = response.json()
 
     assert response.status_code == 200
@@ -426,7 +426,7 @@ def test_create_customers_bulk_duplicate_phone(client, session):
     }
 
     # --- API call ---
-    response = client.post("/customer/bulk", json=payload)
+    response = client.post("/customers/bulk", json=payload)
     data = response.json()
 
     # --- assertions ---
@@ -464,8 +464,8 @@ def test_onboard_default_status_inactive(client, session):
     }
 
     # --- API call ---
-    response = client.post("/customer/", json=payload)
-    assert response.status_code == 200
+    response = client.post("/customers/", json=payload)
+    assert response.status_code == 201
 
     # --- DB verification ---
     device = session.exec(
@@ -524,7 +524,7 @@ def test_agent_cannot_see_other_agents_customers(raw_client, session):
     headers = {"Authorization": f"Bearer {token}"}
 
     # --- API call ---
-    response = raw_client.get("/customer/", headers=headers)
+    response = raw_client.get("/customers/", headers=headers)
     data = response.json()
 
     # --- assertion ---
@@ -537,10 +537,63 @@ def test_unauthenticated_user(raw_client):
     Verify that accessing a protected endpoint without an authorization token returns 401.
     """
     # --- API call ---
-    response = raw_client.get("/customer/no_id")
+    response = raw_client.get("/customers/no_id")
 
     # --- assertion ---
     assert response.status_code == 401
 
+
+
+def test_delete_customer_success(client, session):
+    """
+    Verify soft delete returns 204 with no body and archives the customer's device.
+    """
+    # --- setup: lookups, customer and its single device --
+    village = create_village(session)
+    package = create_package(session)
+    customer_type = create_customer_type(session, CustomerTypeEnum.REGULAR)
+    inactive = create_status(session, StatusEnum.INACTIVE)
+    archived = create_status(session, StatusEnum.ARCHIVED)
+
+    ftth64 = FTTH64(name="FTTH-TEST")
+    session.add(ftth64)
+    session.flush()
+
+    customer = create_customer(
+        session,
+        village_id=village.id,
+        customer_type_id=customer_type.id,
+        ftth64_id=ftth64.id,
+        package_id=package.id,
+        phone="9999999996"
+    )
+
+    device = DeviceInfo(
+        public_id=str(uuid.uuid4()),
+        customer_id=customer.id,
+        vc_number="VC998",
+        status_id=inactive.id
+    )
+    session.add(device)
+    session.commit()
+
+    # --- API call (path becomes /customers/... once the prefix commit is applied) ---
+    response = client.delete(f"/customers/{customer.public_id}")
+
+    # --- assertions ---
+    assert response.status_code == 204
+    assert response.content == b""            # 204 must carry no body
+
+    session.refresh(device)                   # reload from the DB to see the committed change
+    assert device.status_id == archived.id    # soft delete = device moved to ARCHIVED
+
+
+def test_delete_customer_not_found(client):
+    """
+    Verify 404 when the customer does not exist.
+    """
+    response = client.delete("/customers/non-existent-id")
+
+    assert response.status_code == 404
 
 

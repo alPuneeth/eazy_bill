@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
@@ -41,7 +41,7 @@ def get_ftth64(
     return ftth64
 
 
-@router.post("/", response_model=FTTH64Read,
+@router.post("/", response_model=FTTH64Read, status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(require_admin)])
 def create_ftth64(
     payload: FTTH64Create,

@@ -1,7 +1,9 @@
 import logging
+
+from tests.factories import status
 logger = logging.getLogger(__name__)
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
 from app.dependencies.rbac import get_current_user
@@ -39,7 +41,7 @@ from app.services.pagination.paginate_func import paginate
 
 
 router = APIRouter(
-    prefix="/bill",
+    prefix="/bills",
     tags=["Bill"]
     )
 
@@ -101,7 +103,7 @@ def list_bills(
         )
 
 
-@router.get("/generate_bill_code/{village_code}", response_model=str)
+@router.get("/villages/{village_code}/next-bill-code", response_model=str)
 def get_bill_code(
     village_code: str,
     session: Session = Depends(get_session),
@@ -153,7 +155,7 @@ def get_bill(
         )
 
 
-@router.post("/", response_model=BillRead)
+@router.post("/", response_model=BillRead, status_code=status.HTTP_201_CREATED)
 def create_bill(
     payload: BillCreate,
     session: Session = Depends(get_session),
@@ -267,7 +269,7 @@ def update_bill(
 
 # bill by customer public id
 @router.get(
-    "/customer/{customer_public_id}",
+    "/customers/{customer_public_id}",
     response_model=PaginatedResponse[BillRead]
 )
 def get_bills_by_customer(

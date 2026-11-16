@@ -15,7 +15,7 @@ router = APIRouter(
 )
 
 
-@router.post("/bills_with_optional_filters/",
+@router.post("/bills-with-optional-filters",
             response_model=BillFilterResponse,
             dependencies=[]
             )

@@ -16,10 +16,10 @@ def test_create_user_success(client):
         "user_code": "EEE"
     }
 
-    response = client.post("/user/create", json=payload)
+    response = client.post("/users/", json=payload)
     data = response.json()
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert data["name"] == payload["name"]
     assert data["phone"] == payload["phone"]
     assert data["role"] == UserRole.AGENT.value
@@ -39,7 +39,7 @@ def test_create_user_duplicate_phone(client, session):
         "user_code": "ETE"
     }
 
-    response = client.post("/user/create", json=payload)
+    response = client.post("/users/", json=payload)
 
     assert response.status_code == 409
 
@@ -50,7 +50,7 @@ def test_get_user_success(client, session):
     """
     agent = create_agent(session)
     
-    response = client.get(f"/user/{agent.public_id}")
+    response = client.get(f"/users/{agent.public_id}")
     assert response.status_code == 200
     assert response.json()["public_id"] == agent.public_id
     assert response.json()["name"] == agent.name
@@ -61,7 +61,7 @@ def test_get_user_not_found(client):
     Verify that fetching a non-existent user returns 404.
     """
     agent_public_id = str(uuid.uuid4())
-    response = client.get(f"/user/{agent_public_id}")
+    response = client.get(f"/users/{agent_public_id}")
 
     assert response.status_code == 404
 
@@ -76,7 +76,7 @@ def test_update_user_success(client, session):
         "name": "Agent Renamed"
     }
 
-    response = client.patch(f"/user/update/{agent.public_id}", json=payload)
+    response = client.patch(f"/users/{agent.public_id}", json=payload)
     data = response.json()
 
     assert response.status_code == 200
@@ -88,7 +88,7 @@ def test_update_user_not_found(client):
     Verify that updating a non-existent user returns 404.
     """
     payload = {"name": "Does not matter"}
-    response = client.patch(f"/user/update/{str(uuid.uuid4())}", json=payload)
+    response = client.patch(f"/users/{str(uuid.uuid4())}", json=payload)
     assert response.status_code == 404
 
 
@@ -101,5 +101,5 @@ def test_update_user_duplicate_phone(client, session):
 
     payload = {"phone": agent1.phone}
 
-    response = client.patch(f"/user/update/{agent2.public_id}", json=payload)
+    response = client.patch(f"/users/{agent2.public_id}", json=payload)
     assert response.status_code == 409

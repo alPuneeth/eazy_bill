@@ -10,7 +10,7 @@ from app.services.agent_service import assign_villages_to_agent_service, replace
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
-    prefix="/agent",
+    prefix="/agents",
     tags=["Agent"]
     )
 

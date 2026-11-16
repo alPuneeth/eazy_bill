@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
@@ -13,7 +13,7 @@ from app.schemas.lookup.package import (
 )
 
 router = APIRouter(
-    prefix="/package",
+    prefix="/packages",
     tags=["Package"],
     dependencies=[Depends(get_current_user)]
     )
@@ -38,7 +38,7 @@ def get_package(
     return package
 
 
-@router.post("/", response_model=PackageRead,
+@router.post("/", response_model=PackageRead, status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(require_admin)])
 def create_package(
     payload: PackageCreate,
