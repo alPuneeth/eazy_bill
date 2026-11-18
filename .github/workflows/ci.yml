@@ -64,7 +64,7 @@ jobs:
     # only runs if test job passes
     # only runs on push to main - not on pull requests
     needs: test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
 
     steps:
