@@ -6,7 +6,7 @@
 ![Tests](https://img.shields.io/badge/Tests-46-success)
 ![Coverage](https://img.shields.io/badge/Coverage-76%25-yellow)
 
-A containerized REST API backend for a cable operator's billing and customer management system. Built to model realistic operational constraints — billing consistency, concurrency safety, role-based access, and automated deployment.
+A containerized REST API backend for a cable operator's billing and customer management system. Built to model realistic operational constraints — billing consistency, concurrency safety, role-based access, and automated testing with CI/CD.
 
 Repository: https://github.com/alPuneeth/eazy_bill
 
@@ -24,7 +24,7 @@ Repository: https://github.com/alPuneeth/eazy_bill
 | Language       | Python 3.13                       |
 | Containerization | Docker (multi-stage builds)     |
 | CI/CD          | GitHub Actions                    |
-| Deployment     | Railway                           |
+| Deployment     | Railway (currently disabled)      |
 | Testing        | Pytest                            |
 
 ---
@@ -38,7 +38,7 @@ Repository: https://github.com/alPuneeth/eazy_bill
 - RBAC enforced at dependency and service layers
 - Multi-stage Docker builds (build tools and test code excluded from production image)
 - Containerized CI pipeline (identical environment across local, CI, and production)
-- Automated containerized deployment via Railway
+- Deployment pipeline to Railway (opt-in, currently disabled)
 
 ---
 
@@ -156,12 +156,13 @@ Interactive documentation is served at `/docs`.
 ## CI/CD Pipeline
 
 ```text
-git push → GitHub Actions → Run Tests (Docker) → Deploy to Railway
+git push → GitHub Actions → Run Tests (Docker) → Deploy to Railway (opt-in)
 ```
 
 - Tests run inside Docker — identical environment to production
 - Deployment is blocked if any test fails
 - Deployment only triggers on push to `main`, not pull requests
+- Deployment is switched off by default: the deploy job runs only when the `DEPLOY_ENABLED` repository variable is `true`, so it currently shows as skipped
 - `RAILWAY_TOKEN`, `RAILWAY_SERVICE_ID`, and `RAILWAY_PROJECT_ID` stored as GitHub Secrets
 
 ---
